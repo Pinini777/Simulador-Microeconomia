@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Layers } from 'lucide-react';
 import { calcularMonopolio } from '../domain/monopolio';
 
 const gw = 650; const gh = 450;
@@ -16,6 +17,11 @@ const Monopolio = () => {
   const [monoType, setMonoType] = useState('tradicional');
   const [monoDemand, setMonoDemand] = useState(20);
   const [naturalReg, setNaturalReg] = useState('privado');
+
+  // Toggles de visualización
+  const [showDemanda, setShowDemanda] = useState(true);
+  const [showCostos, setShowCostos] = useState(true);
+  const [showArea, setShowArea] = useState(true);
 
   const calc = useMemo(() => calcularMonopolio(monoDemand, naturalReg), [monoDemand, naturalReg]);
 
@@ -84,6 +90,36 @@ const Monopolio = () => {
             )}
           </div>
         )}
+
+        {/* Panel 3: Leyenda Visual (Toggles) */}
+        <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
+            <Layers className="w-5 h-5" /> Leyenda Visual
+          </h2>
+          <div className="space-y-3 font-mono text-xs">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showDemanda} onChange={() => setShowDemanda(!showDemanda)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Demanda (D) e IMg</strong>
+                <span className="text-[10px] text-gray-600">Demanda del mercado (azul) y el Ingreso Marginal (punteada) que cae más rápido.</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showCostos} onChange={() => setShowCostos(!showCostos)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Estructura de Costos</strong>
+                <span className="text-[10px] text-gray-600">Costo Marginal (negro) y Costo Total Medio (violeta).</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showArea} onChange={() => setShowArea(!showArea)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Área de Resultados</strong>
+                <span className="text-[10px] text-gray-600">Beneficios extraordinarios (verde) o Pérdidas (rojo) del monopolio.</span>
+              </div>
+            </label>
+          </div>
+        </div>
       </div>
 
       <div className="lg:col-span-8">
@@ -109,20 +145,27 @@ const Monopolio = () => {
                 </g>))}
               </g>
 
-              {q_trad > 0 && (
+              {q_trad > 0 && showArea && (
                 <polygon points={`${mapX_mono(0)},${mapY_mono(p_trad)} ${mapX_mono(q_trad)},${mapY_mono(p_trad)} ${mapX_mono(q_trad)},${mapY_mono(ctm_trad)} ${mapX_mono(0)},${mapY_mono(ctm_trad)}`} fill={profit_trad < 0 ? "#E60039" : "#00A854"} opacity="0.3" />
               )}
 
-              <line x1={mapX_mono(0)} y1={mapY_mono(monoDemand)} x2={mapX_mono(monoDemand)} y2={mapY_mono(0)} stroke="#0033CC" strokeWidth="4" />
-              <line x1={mapX_mono(0)} y1={mapY_mono(monoDemand)} x2={mapX_mono(monoDemand/2)} y2={mapY_mono(0)} stroke="#0033CC" strokeWidth="4" strokeDasharray="6,4" />
+              {showDemanda && (
+                <g>
+                  <line x1={mapX_mono(0)} y1={mapY_mono(monoDemand)} x2={mapX_mono(monoDemand)} y2={mapY_mono(0)} stroke="#0033CC" strokeWidth="4" />
+                  <line x1={mapX_mono(0)} y1={mapY_mono(monoDemand)} x2={mapX_mono(monoDemand/2)} y2={mapY_mono(0)} stroke="#0033CC" strokeWidth="4" strokeDasharray="6,4" />
+                  <text x={mapX_mono(monoDemand-2)} y={mapY_mono(3)} className="fill-blue-800 font-bold font-serif text-lg">D</text>
+                  <text x={mapX_mono(monoDemand/2 - 1)} y={mapY_mono(1)} className="fill-blue-800 font-bold font-serif">IMg</text>
+                </g>
+              )}
 
-              <path d={`M ${mapX_mono(0)} ${mapY_mono(2)} L ${mapX_mono(22)} ${mapY_mono(24)}`} fill="none" stroke="#111" strokeWidth="4" />
-              <path d={pathCTMeTrad} fill="none" stroke="#9333EA" strokeWidth="3" />
-
-              <text x={mapX_mono(monoDemand-2)} y={mapY_mono(3)} className="fill-blue-800 font-bold font-serif text-lg">D</text>
-              <text x={mapX_mono(monoDemand/2 - 1)} y={mapY_mono(1)} className="fill-blue-800 font-bold font-serif">IMg</text>
-              <text x={mapX_mono(20)} y={mapY_mono(23)} className="fill-black font-bold font-serif text-lg">CMg</text>
-              <text x={mapX_mono(18)} y={mapY_mono(14)} className="fill-purple-800 font-bold font-serif text-lg">CTM</text>
+              {showCostos && (
+                <g>
+                  <path d={`M ${mapX_mono(0)} ${mapY_mono(2)} L ${mapX_mono(22)} ${mapY_mono(24)}`} fill="none" stroke="#111" strokeWidth="4" />
+                  <path d={pathCTMeTrad} fill="none" stroke="#9333EA" strokeWidth="3" />
+                  <text x={mapX_mono(20)} y={mapY_mono(23)} className="fill-black font-bold font-serif text-lg">CMg</text>
+                  <text x={mapX_mono(18)} y={mapY_mono(14)} className="fill-purple-800 font-bold font-serif text-lg">CTM</text>
+                </g>
+              )}
 
               {q_trad > 0 && (
                 <g>
@@ -150,17 +193,27 @@ const Monopolio = () => {
                 </g>))}
               </g>
 
-              <polygon points={`${mapX_nat(0)},${mapY_nat(p_nat)} ${mapX_nat(q_nat)},${mapY_nat(p_nat)} ${mapX_nat(q_nat)},${mapY_nat(ctm_nat)} ${mapX_nat(0)},${mapY_nat(ctm_nat)}`} fill={profit_nat >= 0 ? "#00A854" : "#E60039"} opacity="0.4" />
+              {showArea && (
+                <polygon points={`${mapX_nat(0)},${mapY_nat(p_nat)} ${mapX_nat(q_nat)},${mapY_nat(p_nat)} ${mapX_nat(q_nat)},${mapY_nat(ctm_nat)} ${mapX_nat(0)},${mapY_nat(ctm_nat)}`} fill={profit_nat >= 0 ? "#00A854" : "#E60039"} opacity="0.4" />
+              )}
 
-              <line x1={mapX_nat(0)} y1={mapY_nat(24)} x2={mapX_nat(48)} y2={mapY_nat(0)} stroke="#0033CC" strokeWidth="4" />
-              <line x1={mapX_nat(0)} y1={mapY_nat(24)} x2={mapX_nat(24)} y2={mapY_nat(0)} stroke="#0033CC" strokeWidth="4" strokeDasharray="6,4" />
-              <line x1={mapX_nat(0)} y1={mapY_nat(4)} x2={mapX_nat(50)} y2={mapY_nat(4)} stroke="#111" strokeWidth="4" />
-              <path d={pathCTMeNat} fill="none" stroke="#9333EA" strokeWidth="3" />
+              {showDemanda && (
+                <g>
+                  <line x1={mapX_nat(0)} y1={mapY_nat(24)} x2={mapX_nat(48)} y2={mapY_nat(0)} stroke="#0033CC" strokeWidth="4" />
+                  <line x1={mapX_nat(0)} y1={mapY_nat(24)} x2={mapX_nat(24)} y2={mapY_nat(0)} stroke="#0033CC" strokeWidth="4" strokeDasharray="6,4" />
+                  <text x={mapX_nat(45)} y={mapY_nat(2)} className="fill-blue-800 font-bold font-serif text-lg">D</text>
+                  <text x={mapX_nat(23)} y={mapY_nat(2)} className="fill-blue-800 font-bold font-serif text-lg">IMg</text>
+                </g>
+              )}
 
-              <text x={mapX_nat(45)} y={mapY_nat(2)} className="fill-blue-800 font-bold font-serif text-lg">D</text>
-              <text x={mapX_nat(23)} y={mapY_nat(2)} className="fill-blue-800 font-bold font-serif text-lg">IMg</text>
-              <text x={mapX_nat(42)} y={mapY_nat(3.5)} className="fill-black font-bold font-serif text-lg">CMg</text>
-              <text x={mapX_nat(38)} y={mapY_nat(9)} className="fill-purple-800 font-bold font-serif text-lg">CTMe</text>
+              {showCostos && (
+                <g>
+                  <line x1={mapX_nat(0)} y1={mapY_nat(4)} x2={mapX_nat(50)} y2={mapY_nat(4)} stroke="#111" strokeWidth="4" />
+                  <path d={pathCTMeNat} fill="none" stroke="#9333EA" strokeWidth="3" />
+                  <text x={mapX_nat(42)} y={mapY_nat(3.5)} className="fill-black font-bold font-serif text-lg">CMg</text>
+                  <text x={mapX_nat(38)} y={mapY_nat(9)} className="fill-purple-800 font-bold font-serif text-lg">CTMe</text>
+                </g>
+              )}
 
               <line x1={mapX_nat(q_nat)} y1={mapY_nat(0)} x2={mapX_nat(q_nat)} y2={mapY_nat(Math.max(p_nat, ctm_nat))} stroke="#111" strokeDasharray="4,4" />
               <line x1={mapX_nat(0)} y1={mapY_nat(p_nat)} x2={mapX_nat(q_nat)} y2={mapY_nat(p_nat)} stroke="#111" strokeDasharray="4,4" />

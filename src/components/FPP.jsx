@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Layers } from 'lucide-react';
 import { calcularFPP } from '../domain/fpp';
 
 const gw = 650; const gh = 450;
@@ -17,6 +18,10 @@ const FPP = () => {
   const [techY, setTechY] = useState(100); 
   const [pointX, setPointX] = useState(50);
   const [pointY, setPointY] = useState(50);
+
+  // Toggles de visualización
+  const [showFrontera, setShowFrontera] = useState(true);
+  const [showGuias, setShowGuias] = useState(true);
 
   const { status } = useMemo(() => calcularFPP(techX, techY, pointX, pointY), [techX, techY, pointX, pointY]);
 
@@ -40,7 +45,7 @@ const FPP = () => {
       <div className="lg:col-span-4 space-y-6">
         <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
           <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Capacidad Tecnológica</h2>
-          <p className="font-sans text-xs">Mueve estos valores para simular <strong>Crecimiento Económico</strong> (desplazamiento de la frontera hacia afuera).</p>
+          <p className="font-sans text-xs">Mueve estos valores para simular <strong>Crecimiento Económico</strong>.</p>
           <div>
             <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Tech Y (Autos)</span><span className="bg-[#111] text-white px-1">{techY}</span></div>
             <input type="range" min="50" max="150" value={techY} onChange={(e) => setTechY(Number(e.target.value))} className="w-full accent-[#111]" />
@@ -60,6 +65,29 @@ const FPP = () => {
           <div>
             <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Producir PCs</span><span>{pointX}</span></div>
             <input type="range" min="0" max="150" value={pointX} onChange={(e) => setPointX(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+          </div>
+        </div>
+
+        {/* Panel 3: Leyenda Visual (Toggles) */}
+        <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
+            <Layers className="w-5 h-5" /> Leyenda Visual
+          </h2>
+          <div className="space-y-3 font-mono text-xs">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showFrontera} onChange={() => setShowFrontera(!showFrontera)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Mostrar Frontera</strong>
+                <span className="text-[10px] text-gray-600">Línea que marca la producción máxima posible con la tecnología actual.</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showGuias} onChange={() => setShowGuias(!showGuias)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Mostrar Guías</strong>
+                <span className="text-[10px] text-gray-600">Líneas punteadas para visualizar fácilmente las coordenadas del punto de producción.</span>
+              </div>
+            </label>
           </div>
         </div>
 
@@ -94,11 +122,21 @@ const FPP = () => {
                   <text x={mapX(v)} y={gh-pB+18} textAnchor="middle">{v}</text>
               </g>))}
             </g>
-            <path d={`${pathD} L ${mapX(0)} ${mapY(0)} Z`} fill="#111" opacity="0.05" />
-            <path d={pathD} fill="none" stroke="#111" strokeWidth="4" />
+            
+            {showFrontera && (
+              <g>
+                <path d={`${pathD} L ${mapX(0)} ${mapY(0)} Z`} fill="#111" opacity="0.05" />
+                <path d={pathD} fill="none" stroke="#111" strokeWidth="4" />
+              </g>
+            )}
 
-            <line x1={mapX(0)} y1={mapY(pointY)} x2={mapX(pointX)} y2={mapY(pointY)} stroke={fppColor} strokeDasharray="4,4" />
-            <line x1={mapX(pointX)} y1={mapY(0)} x2={mapX(pointX)} y2={mapY(pointY)} stroke={fppColor} strokeDasharray="4,4" />
+            {showGuias && (
+              <g>
+                <line x1={mapX(0)} y1={mapY(pointY)} x2={mapX(pointX)} y2={mapY(pointY)} stroke={fppColor} strokeDasharray="4,4" />
+                <line x1={mapX(pointX)} y1={mapY(0)} x2={mapX(pointX)} y2={mapY(pointY)} stroke={fppColor} strokeDasharray="4,4" />
+              </g>
+            )}
+            
             <circle cx={mapX(pointX)} cy={mapY(pointY)} r="8" fill={fppColor} stroke="#fff" strokeWidth="2" />
           </svg>
         </div>

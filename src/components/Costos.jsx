@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Layers } from 'lucide-react';
 import { calcularCostos } from '../domain/costos';
 
 const gw = 650; const gh = 450;
@@ -14,6 +15,12 @@ const drawGrid = (id) => (
 
 const Costos = () => {
   const [firmPrice, setFirmPrice] = useState(8);
+
+  // Toggles de visualización
+  const [showCMg, setShowCMg] = useState(true);
+  const [showCostosMedios, setShowCostosMedios] = useState(true);
+  const [showZonasCriticas, setShowZonasCriticas] = useState(true);
+  const [showArea, setShowArea] = useState(true);
 
   const { firmQ, currentCTM, currentProfit, status, minCVM_Q, minCVM_P, minCTM_Q, minCTM_P } = useMemo(() => calcularCostos(firmPrice), [firmPrice]);
 
@@ -44,14 +51,6 @@ const Costos = () => {
           <p className="font-sans text-xs font-medium leading-relaxed mb-4">
             La empresa Competitiva produce donde <strong className="bg-[#FFD700] px-1">P = CMg</strong>. Las curvas de Costos Medios (CTM y CVM) tienen forma de U, y el CMg SIEMPRE las corta en su punto más bajo.
           </p>
-          <ul className="space-y-2 font-mono text-[10px] font-bold uppercase">
-            <li className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-[#0033CC] border border-[#111]"></div> P. Nivelación: Mínimo CTM ($7.55)
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-[#E60039] border border-[#111]"></div> P. Cierre: Mínimo CVM ($4.00)
-            </li>
-          </ul>
         </div>
 
         <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5">
@@ -77,6 +76,43 @@ const Costos = () => {
             </div>
           </div>
         </div>
+
+        {/* Panel 3: Leyenda Visual (Toggles) */}
+        <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
+            <Layers className="w-5 h-5" /> Leyenda Visual
+          </h2>
+          <div className="space-y-3 font-mono text-xs">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showCMg} onChange={() => setShowCMg(!showCMg)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Costo Marginal (CMg)</strong>
+                <span className="text-[10px] text-gray-600">Lo que cuesta producir una unidad extra. Representa la curva de Oferta.</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showCostosMedios} onChange={() => setShowCostosMedios(!showCostosMedios)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Costos Medios (CTM y CVM)</strong>
+                <span className="text-[10px] text-gray-600">Costo Total Medio (azul) y Costo Variable Medio (violeta). Determinan la rentabilidad.</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showZonasCriticas} onChange={() => setShowZonasCriticas(!showZonasCriticas)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Puntos Críticos</strong>
+                <span className="text-[10px] text-gray-600">Punto de Nivelación (donde Beneficio=0) y Punto de Cierre (donde conviene no producir).</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showArea} onChange={() => setShowArea(!showArea)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Área de Resultado</strong>
+                <span className="text-[10px] text-gray-600">Rectángulo que visualiza la ganancia o pérdida total de la empresa.</span>
+              </div>
+            </label>
+          </div>
+        </div>
       </div>
 
       <div className="lg:col-span-8">
@@ -98,27 +134,40 @@ const Costos = () => {
               </g>))}
             </g>
 
-            {firmQ > 0 && (
+            {firmQ > 0 && showArea && (
               <polygon points={`${mapX_cost(0)},${mapY_cost(firmPrice)} ${mapX_cost(firmQ)},${mapY_cost(firmPrice)} ${mapX_cost(firmQ)},${mapY_cost(currentCTM)} ${mapX_cost(0)},${mapY_cost(currentCTM)}`} fill={firmPrice >= currentCTM ? "#00A854" : "#FFD700"} opacity="0.3" />
             )}
 
-            <path d={pathCVM} fill="none" stroke="#9333EA" strokeWidth="3" strokeDasharray="4,4" />
-            <text x={mapX_cost(14)} y={mapY_cost(8.5)} className="fill-purple-800 font-bold font-serif">CVM</text>
-            <path d={pathCTM} fill="none" stroke="#0033CC" strokeWidth="3" />
-            <text x={mapX_cost(14)} y={mapY_cost(12.5)} className="fill-blue-800 font-bold font-serif">CTM</text>
-            <path d={pathCMg} fill="none" stroke="#111" strokeWidth="4" />
-            <text x={mapX_cost(11.5)} y={mapY_cost(16)} className="fill-black font-bold font-serif">CMg</text>
+            {showCostosMedios && (
+              <g>
+                <path d={pathCVM} fill="none" stroke="#9333EA" strokeWidth="3" strokeDasharray="4,4" />
+                <text x={mapX_cost(14)} y={mapY_cost(8.5)} className="fill-purple-800 font-bold font-serif">CVM</text>
+                <path d={pathCTM} fill="none" stroke="#0033CC" strokeWidth="3" />
+                <text x={mapX_cost(14)} y={mapY_cost(12.5)} className="fill-blue-800 font-bold font-serif">CTM</text>
+              </g>
+            )}
 
-            <g opacity={firmPrice < minCTM_P ? "1" : "0.5"}>
-              <circle cx={mapX_cost(minCVM_Q)} cy={mapY_cost(minCVM_P)} r="6" fill="#E60039" stroke="#111" strokeWidth="2" />
-              <path d={`M ${mapX_cost(minCVM_Q)} ${mapY_cost(minCVM_P)} L ${mapX_cost(minCVM_Q+1.5)} ${mapY_cost(minCVM_P-2)}`} stroke="#E60039" strokeWidth="2" />
-              <text x={mapX_cost(minCVM_Q+1.7)} y={mapY_cost(minCVM_P-2.2)} className="font-bold font-mono text-[10px] fill-[#E60039]">P. CIERRE</text>
-            </g>
-            <g opacity={firmPrice >= minCVM_P ? "1" : "0.5"}>
-              <circle cx={mapX_cost(minCTM_Q)} cy={mapY_cost(minCTM_P)} r="6" fill="#0033CC" stroke="#111" strokeWidth="2" />
-              <path d={`M ${mapX_cost(minCTM_Q)} ${mapY_cost(minCTM_P)} L ${mapX_cost(minCTM_Q+1.5)} ${mapY_cost(minCTM_P-2)}`} stroke="#0033CC" strokeWidth="2" />
-              <text x={mapX_cost(minCTM_Q+1.7)} y={mapY_cost(minCTM_P-2.2)} className="font-bold font-mono text-[10px] fill-[#0033CC]">P. NIVELACIÓN</text>
-            </g>
+            {showCMg && (
+              <g>
+                <path d={pathCMg} fill="none" stroke="#111" strokeWidth="4" />
+                <text x={mapX_cost(11.5)} y={mapY_cost(16)} className="fill-black font-bold font-serif">CMg</text>
+              </g>
+            )}
+
+            {showZonasCriticas && (
+              <g>
+                <g opacity={firmPrice < minCTM_P ? "1" : "0.5"}>
+                  <circle cx={mapX_cost(minCVM_Q)} cy={mapY_cost(minCVM_P)} r="6" fill="#E60039" stroke="#111" strokeWidth="2" />
+                  <path d={`M ${mapX_cost(minCVM_Q)} ${mapY_cost(minCVM_P)} L ${mapX_cost(minCVM_Q+1.5)} ${mapY_cost(minCVM_P-2)}`} stroke="#E60039" strokeWidth="2" />
+                  <text x={mapX_cost(minCVM_Q+1.7)} y={mapY_cost(minCVM_P-2.2)} className="font-bold font-mono text-[10px] fill-[#E60039]">P. CIERRE</text>
+                </g>
+                <g opacity={firmPrice >= minCVM_P ? "1" : "0.5"}>
+                  <circle cx={mapX_cost(minCTM_Q)} cy={mapY_cost(minCTM_P)} r="6" fill="#0033CC" stroke="#111" strokeWidth="2" />
+                  <path d={`M ${mapX_cost(minCTM_Q)} ${mapY_cost(minCTM_P)} L ${mapX_cost(minCTM_Q+1.5)} ${mapY_cost(minCTM_P-2)}`} stroke="#0033CC" strokeWidth="2" />
+                  <text x={mapX_cost(minCTM_Q+1.7)} y={mapY_cost(minCTM_P-2.2)} className="font-bold font-mono text-[10px] fill-[#0033CC]">P. NIVELACIÓN</text>
+                </g>
+              </g>
+            )}
 
             <line x1={mapX_cost(0)} y1={mapY_cost(firmPrice)} x2={gw-pR} y2={mapY_cost(firmPrice)} stroke="#FFD700" strokeWidth="4" />
             <text x={gw-pR-40} y={mapY_cost(firmPrice)-6} className="fill-[#b8860b] font-bold font-mono">P=IMg</text>

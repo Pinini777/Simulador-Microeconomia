@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Scale, BookOpen } from 'lucide-react';
+import { Scale, BookOpen, Layers } from 'lucide-react';
 import { calcularMercado } from '../domain/mercado';
 
 const gw = 650; const gh = 450;
@@ -15,6 +15,10 @@ const drawGrid = (id) => (
 
 const Mercado = () => {
   const [escMercado, setEscMercado] = useState('libre'); 
+  
+  // Toggles de visualización
+  const [showCurves, setShowCurves] = useState(true);
+  const [showEquilibrium, setShowEquilibrium] = useState(true);
   const [showAreas, setShowAreas] = useState(true);
   
   const [dInt, setDInt] = useState(16);
@@ -23,7 +27,6 @@ const Mercado = () => {
   const [sSlope, setSSlope] = useState(1);
   const [intervencionVal, setIntervencionVal] = useState(4); 
 
-  // Cálculos de Dominio memorizados
   const calc = useMemo(() => {
     return calcularMercado(dInt, dSlope, sInt, sSlope, escMercado, intervencionVal);
   }, [dInt, dSlope, sInt, sSlope, escMercado, intervencionVal]);
@@ -40,6 +43,7 @@ const Mercado = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
       <div className="lg:col-span-4 space-y-6">
+        {/* Panel 1: Controles Principales */}
         <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
           <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
             <Scale className="w-5 h-5" /> 1. El Mercado
@@ -62,27 +66,52 @@ const Mercado = () => {
           )}
         </div>
 
+        {/* Panel 2: Elasticidades */}
         <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#0033CC] p-5 space-y-5">
           <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">2. Elasticidades</h2>
-          <p className="font-sans text-xs leading-snug">Controla la "sensibilidad" (pendiente) de los agentes. Analiza quién paga realmente un impuesto (<strong>Incidencia Fiscal</strong>).</p>
+          <p className="font-sans text-xs leading-snug">Controla la "sensibilidad" (pendiente) de los agentes.</p>
           <div>
             <div className="flex justify-between font-mono text-xs font-bold mb-1 text-[#0033CC]">
               <span>Demanda (Consumidores)</span>
-              <span>{dSlope < 0.5 ? 'Muy Elástica' : dSlope > 1.5 ? 'Inelástica' : 'Unitaria'}</span>
             </div>
             <input type="range" min="0.2" max="3" step="0.1" value={dSlope} onChange={(e) => setDSlope(Number(e.target.value))} className="w-full accent-[#0033CC]" />
           </div>
           <div>
             <div className="flex justify-between font-mono text-xs font-bold mb-1 text-[#E60039]">
               <span>Oferta (Productores)</span>
-              <span>{sSlope < 0.5 ? 'Muy Elástica' : sSlope > 1.5 ? 'Inelástica' : 'Unitaria'}</span>
             </div>
             <input type="range" min="0.2" max="3" step="0.1" value={sSlope} onChange={(e) => setSSlope(Number(e.target.value))} className="w-full accent-[#E60039]" />
           </div>
-          <label className="flex items-center gap-2 cursor-pointer pt-3">
-            <input type="checkbox" checked={showAreas} onChange={() => setShowAreas(!showAreas)} className="w-4 h-4 accent-[#111]" />
-            <span className="font-bold font-mono text-[10px] uppercase">Mostrar Excedentes y Pérdida Social (PIE)</span>
-          </label>
+        </div>
+
+        {/* Panel 3: Leyenda Visual (Toggles) */}
+        <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
+            <Layers className="w-5 h-5" /> Leyenda Visual
+          </h2>
+          <div className="space-y-3 font-mono text-xs">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showCurves} onChange={() => setShowCurves(!showCurves)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Mostrar Curvas (D y O)</strong>
+                <span className="text-[10px] text-gray-600">Líneas de Oferta (rojo) y Demanda (azul) que representan las intenciones de compra y venta.</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showEquilibrium} onChange={() => setShowEquilibrium(!showEquilibrium)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Punto de Equilibrio</strong>
+                <span className="text-[10px] text-gray-600">Intersección donde Oferta = Demanda (mercado vaciado).</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input type="checkbox" checked={showAreas} onChange={() => setShowAreas(!showAreas)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+              <div>
+                <strong className="uppercase block">Excedentes y PIE</strong>
+                <span className="text-[10px] text-gray-600">Muestra las áreas de beneficio social y la Pérdida Irrecuperable de Eficiencia.</span>
+              </div>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -132,26 +161,33 @@ const Mercado = () => {
               </g>
             )}
 
-            <line x1={mapX(0)} y1={mapY(dInt)} x2={mapX(dXEnd)} y2={mapY(0)} stroke="#0033CC" strokeWidth="4" />
-            <text x={mapX(Math.min(dXEnd, 20)-1)} y={mapY(Math.max(dInt - dSlope*20, 0)) - 10} className="font-bold fill-[#0033CC] text-lg">D</text>
-
-            <line x1={mapX(0)} y1={mapY(sInt)} x2={mapX(sXEnd)} y2={mapY(20)} stroke="#E60039" strokeWidth="4" />
-            <text x={mapX(Math.min(sXEnd, 20)-1)} y={mapY(Math.min(sInt + sSlope*20, 20)) + 15} className="font-bold fill-[#E60039] text-lg">O</text>
-
-            <circle cx={mapX(Qe)} cy={mapY(Pe)} r="5" fill={escMercado==='libre' ? "#111" : "#999"} />
-
-            {escMercado !== 'libre' && (
+            {showCurves && (
               <g>
-                <line x1={mapX(Qt)} y1={mapY(0)} x2={mapX(Qt)} y2={mapY(Math.max(Pc,Pp))} stroke="#111" strokeDasharray="4,4" />
-                <line x1={mapX(0)} y1={mapY(Pc)} x2={mapX(Qt)} y2={mapY(Pc)} stroke="#0033CC" strokeDasharray="4,4" strokeWidth="2" />
-                <circle cx={mapX(Qt)} cy={mapY(Pc)} r="6" fill="#0033CC" />
-                <text x={pL + 5} y={mapY(Pc) - 5} className="font-bold font-mono text-[10px] fill-[#0033CC]">P. Consumidor</text>
+                <line x1={mapX(0)} y1={mapY(dInt)} x2={mapX(dXEnd)} y2={mapY(0)} stroke="#0033CC" strokeWidth="4" />
+                <text x={mapX(Math.min(dXEnd, 20)-1)} y={mapY(Math.max(dInt - dSlope*20, 0)) - 10} className="font-bold fill-[#0033CC] text-lg">D</text>
 
-                <line x1={mapX(0)} y1={mapY(Pp)} x2={mapX(Qt)} y2={mapY(Pp)} stroke="#E60039" strokeDasharray="4,4" strokeWidth="2" />
-                <circle cx={mapX(Qt)} cy={mapY(Pp)} r="6" fill="#E60039" />
-                <text x={pL + 5} y={mapY(Pp) + 12} className="font-bold font-mono text-[10px] fill-[#E60039]">P. Productor</text>
+                <line x1={mapX(0)} y1={mapY(sInt)} x2={mapX(sXEnd)} y2={mapY(20)} stroke="#E60039" strokeWidth="4" />
+                <text x={mapX(Math.min(sXEnd, 20)-1)} y={mapY(Math.min(sInt + sSlope*20, 20)) + 15} className="font-bold fill-[#E60039] text-lg">O</text>
+              </g>
+            )}
 
-                {showAreas && <text x={mapX(Qt + (Qe-Qt)/2)} y={mapY(Pe) + 4} className="font-bold fill-white text-[10px]" style={{textShadow: '1px 1px 0 #000'}}>PIE</text>}
+            {showEquilibrium && (
+              <g>
+                <circle cx={mapX(Qe)} cy={mapY(Pe)} r="5" fill={escMercado==='libre' ? "#111" : "#999"} />
+                {escMercado !== 'libre' && (
+                  <g>
+                    <line x1={mapX(Qt)} y1={mapY(0)} x2={mapX(Qt)} y2={mapY(Math.max(Pc,Pp))} stroke="#111" strokeDasharray="4,4" />
+                    <line x1={mapX(0)} y1={mapY(Pc)} x2={mapX(Qt)} y2={mapY(Pc)} stroke="#0033CC" strokeDasharray="4,4" strokeWidth="2" />
+                    <circle cx={mapX(Qt)} cy={mapY(Pc)} r="6" fill="#0033CC" />
+                    <text x={pL + 5} y={mapY(Pc) - 5} className="font-bold font-mono text-[10px] fill-[#0033CC]">P. Consumidor</text>
+
+                    <line x1={mapX(0)} y1={mapY(Pp)} x2={mapX(Qt)} y2={mapY(Pp)} stroke="#E60039" strokeDasharray="4,4" strokeWidth="2" />
+                    <circle cx={mapX(Qt)} cy={mapY(Pp)} r="6" fill="#E60039" />
+                    <text x={pL + 5} y={mapY(Pp) + 12} className="font-bold font-mono text-[10px] fill-[#E60039]">P. Productor</text>
+
+                    {showAreas && <text x={mapX(Qt + (Qe-Qt)/2)} y={mapY(Pe) + 4} className="font-bold fill-white text-[10px]" style={{textShadow: '1px 1px 0 #000'}}>PIE</text>}
+                  </g>
+                )}
               </g>
             )}
           </svg>
