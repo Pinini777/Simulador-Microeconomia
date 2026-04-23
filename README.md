@@ -1,10 +1,12 @@
-# 📊 Simulador de Microeconomía - Master Suite
+#  Simulador de Microeconomía
 
-¡Hola! 👋 Primero que nada, una aclaración importante: **no soy profesor de economía**. Soy simplemente un estudiante como vos, que armó esta herramienta con el objetivo de ayudarnos mutuamente a entender mejor los conceptos de la materia. 
+¿Como andas Maquina? Primero que nada, una aclaración importante: **no soy profesor de economía**. Soy simplemente un estudiante, que sin mucha idea, armó a lo kamikaze esta herramienta con el objetivo de ayudarnos a entender mejor los conceptos de la materia de Economia. 
 
-A veces la teoría en los libros es medio abstracta, así que cree este simulador interactivo para que podamos visualizar qué pasa realmente cuando movemos las variables económicas.
+A veces la teoría en los libros es medio abstracta, así que cree este simulador interactivo para que podamos visualizar qué pasa realmente cuando movemos las variables económicas, ya que si veo los graficos estaticos, no se me cae una sola idea.
 
-## 🚀 ¿Qué es esto?
+A partir de aca, te dejo un tutorial generado con IA donde enseña, paso a paso, como usar este simulador.
+
+##  ¿Qué es esta web?
 
 Es una aplicación interactiva (Single Page Application) donde podés jugar y experimentar con los modelos fundamentales de la microeconomía. 
 
@@ -29,7 +31,7 @@ El simulador está dividido en 4 unidades principales:
    - Comprendé la maximización de beneficios de un monopolio tradicional donde IMg = CMg.
    - Analizá el dilema de la regulación en un **Monopolio Natural** (regulador estatal vs. monopolista privado).
 
-## 💻 ¿Cómo utilizarlo en tu computadora?
+##  ¿Cómo utilizarlo en tu computadora?
 
 Si querés descargar el código fuente y correrlo localmente en tu compu, seguí estos pasos:
 
@@ -55,7 +57,7 @@ Asegurate de tener instalado [Node.js](https://nodejs.org/es/).
    ```
 ¡Listo! Vas a poder acceder desde tu navegador en `http://localhost:5173`.
 
-## 🛠️ Arquitectura Técnica
+## Arquitectura Técnica
 
 Si sos del palo de sistemas y te interesa el código, este proyecto está construido con:
 - **Vite + React**: Para un entorno rápido y modular.
@@ -63,4 +65,4 @@ Si sos del palo de sistemas y te interesa el código, este proyecto está constr
 - **TailwindCSS**: Para el diseño Neo-Brutalista.
 
 ---
-¡Espero que te sirva para estudiar y aprobar la materia! Si encontrás algún error matemático o conceptual, sentite libre de levantar un *Issue* o hacer un *Pull Request*. ¡Éxitos! 🎓
+¡Espero que te sirva para estudiar y aprobar la materia! Si encontrás algún error matemático o conceptual, sentite libre de levantar un *Issue* o hacer un PR puro y duro.
