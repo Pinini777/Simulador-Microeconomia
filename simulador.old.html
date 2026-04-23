@@ -1,0 +1,842 @@
+import React, { useState } from 'react';
+import {
+LineChart, Settings2, Target, Factory, Crown, Ban,
+TrendingDown, TrendingUp, Scale, AlertTriangle, Info, BookOpen
+} from 'lucide-react';
+
+const App = () => {
+const [activeTab, setActiveTab] = useState('mercado'); // 'mercado' | 'fpp' | 'costos' | 'monopolio'
+
+// ==========================================
+// ESTADOS: 1. MERCADO, ELASTICIDADES E IMPUESTOS (U1.2 - U1.3)
+// ==========================================
+const [escMercado, setEscMercado] = useState('libre'); // 'libre' | 'impuesto' | 'subsidio'
+const [showAreas, setShowAreas] = useState(true);
+
+// Parámetros de intercepto (Fuerza)
+const [dInt, setDInt] = useState(16);
+const [sInt, setSInt] = useState(2);
+
+// Parámetros de ELASTICIDAD (Pendiente). Cerca de 0 = Elástica (Plana), Alto = Inelástica (Empinada)
+const [dSlope, setDSlope] = useState(1);
+const [sSlope, setSSlope] = useState(1);
+
+const [intervencionVal, setIntervencionVal] = useState(4); // Valor de impuesto o subsidio
+
+// --- MATEMÁTICA MERCADO ---
+// Demanda: P = dInt - dSlope * Q
+// Oferta: P = sInt + sSlope * Q
+const Qe = Math.max(0, (dInt - sInt) / (dSlope + sSlope));
+const Pe = dInt - dSlope * Qe;
+
+let Qt = Qe, Pc = Pe, Pp = Pe;
+let taxRevenue = 0, subsidyCost = 0;
+
+if (escMercado === 'impuesto') {
+Qt = Math.max(0, (dInt - sInt - intervencionVal) / (dSlope + sSlope));
+Pc = dInt - dSlope * Qt;
+Pp = sInt + sSlope * Qt;
+taxRevenue = intervencionVal * Qt;
+} else if (escMercado === 'subsidio') {
+Qt = Math.max(0, (dInt - sInt + intervencionVal) / (dSlope + sSlope));
+Pc = dInt - dSlope * Qt;
+Pp = sInt + sSlope * Qt;
+subsidyCost = intervencionVal * Qt;
+}
+
+// ==========================================
+// ESTADOS: 2. FRONTERA DE POSIBILIDADES (FPP) (U1.1)
+// ==========================================
+const [techX, setTechX] = useState(100); // Automóviles
+const [techY, setTechY] = useState(100); // Computadoras
+const [pointX, setPointX] = useState(50);
+const [pointY, setPointY] = useState(50);
+
+const maxPossibleYAtX = pointX <= techX ? techY * Math.sqrt(1 - Math.pow(pointX / techX, 2)) : 0; let
+    fppStatus='eficiente' , fppColor='#111' ; if (pointX> techX || pointY > maxPossibleYAtX + 2) { fppStatus =
+    'inalcanzable'; fppColor = '#E60039'; }
+    else if (pointY < maxPossibleYAtX - 2) { fppStatus='ineficiente' ; fppColor='#0033CC' ; } else {
+        fppStatus='eficiente' ; fppColor='#00A854' ; } //==========================================// ESTADOS: 3. COSTOS
+        DE LA EMPRESA (U 1.4-1.5) //==========================================const [firmPrice,
+        setFirmPrice]=useState(8); const minCVM_Q=8, minCVM_P=4.0; // Punto Cierre const minCTM_Q=9.25, minCTM_P=7.55;
+        // Punto Nivelación let firmQ=0; const discriminant=3.2 * 3.2 - 4 * 0.3 * (10.4 - firmPrice); if (discriminant>=
+        0 && firmPrice >= minCVM_P) {
+        firmQ = (3.2 + Math.sqrt(discriminant)) / 0.6;
+        }
+        const currentCTM = firmQ > 0 ? (0.1 * Math.pow(firmQ, 2) - 1.6 * firmQ + 10.4 + 30 / firmQ) : 0;
+        const currentProfit = (firmPrice - currentCTM) * firmQ;
+
+        let firmStatus = '', firmStatusColor = '';
+        if (firmQ === 0) { firmStatus = 'CIERRE DE EMPRESA'; firmStatusColor = '#E60039'; }
+        else if (firmPrice >= minCTM_P + 0.1) { firmStatus = 'BENEFICIOS EXTRAORDINARIOS'; firmStatusColor = '#00A854';
+        }
+        else if (Math.abs(firmPrice - minCTM_P) < 0.2) { firmStatus='PUNTO DE NIVELACIÓN' ; firmStatusColor='#0033CC' ;
+            } else { firmStatus='PRODUCCIÓN CON PÉRDIDAS' ; firmStatusColor='#FFD700' ; }
+            //==========================================// ESTADOS: 4. MONOPOLIO (U 1.6)
+            //==========================================const [monoType, setMonoType]=useState('tradicional'); const
+            [monoDemand, setMonoDemand]=useState(20); const [naturalReg, setNaturalReg]=useState('privado'); //
+            Tradicional const q_trad=Math.max(0, (monoDemand - 2) / 3); const p_trad=monoDemand - q_trad; const
+            ctm_trad=q_trad> 0 ? 2 + 0.5 * q_trad + 20 / q_trad : 0;
+            const profit_trad = (p_trad - ctm_trad) * q_trad;
+
+            // Natural
+            const q_nat_priv = 20, p_nat_priv = 14, ctm_nat_priv = 12, profit_nat_priv = 40;
+            const q_nat_reg = 40, p_nat_reg = 4, ctm_nat_reg = 8, profit_nat_reg = -160;
+
+            const q_nat = naturalReg === 'privado' ? q_nat_priv : q_nat_reg;
+            const p_nat = naturalReg === 'privado' ? p_nat_priv : p_nat_reg;
+            const ctm_nat = naturalReg === 'privado' ? ctm_nat_priv : ctm_nat_reg;
+            const profit_nat = naturalReg === 'privado' ? profit_nat_priv : profit_nat_reg;
+
+            // ==========================================
+            // UTILIDADES DE DIBUJO SVG GLOBALES
+            // ==========================================
+            const gw = 650; const gh = 450;
+            const pL = 60; const pB = 50; const pT = 30; const pR = 30;
+
+            const drawGrid = (id) => (
+            <defs>
+                <pattern id={id} width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E5E5" strokeWidth="1" />
+                </pattern>
+            </defs>
+            );
+
+            // ==========================================
+            // RENDER TAB 1: MERCADO Y ELASTICIDADES
+            // ==========================================
+            const renderMercado = () => {
+            const maxX = 20, maxY = 20;
+            const mapX = (x) => pL + (x / maxX) * (gw - pL - pR);
+            const mapY = (y) => gh - pB - (y / maxY) * (gh - pB - pT);
+
+            const dXEnd = dInt / dSlope;
+            const sXEnd = (maxY - sInt) / sSlope;
+
+            return (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
+                <div className="lg:col-span-4 space-y-6">
+
+                    <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+                        <h2
+                            className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
+                            <Scale className="w-5 h-5" /> 1. El Mercado
+                        </h2>
+                        <div className="flex gap-2 font-mono text-xs uppercase font-bold">
+                            {['libre', 'impuesto', 'subsidio'].map(t => (
+                            <button key={t} onClick={()=> setEscMercado(t)} className={`flex-1 p-2 border-2
+                                border-[#111] ${escMercado === t ? 'bg-[#111] text-[#FFD700]' : 'hover:bg-gray-100'}`}>
+                                {t}
+                            </button>
+                            ))}
+                        </div>
+
+                        {escMercado !== 'libre' && (
+                        <div className="pt-3 border-t-2 border-[#111] border-dashed">
+                            <div className="flex justify-between font-mono text-xs font-bold mb-1">
+                                <span>Monto de Intervención</span><span
+                                    className="bg-[#111] text-white px-1">${intervencionVal}</span>
+                            </div>
+                            <input type="range" min="1" max="8" step="1" value={intervencionVal} onChange={(e)=>
+                            setIntervencionVal(Number(e.target.value))} className="w-full accent-[#111]" />
+                        </div>
+                        )}
+                    </div>
+
+                    <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#0033CC] p-5 space-y-5">
+                        <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">2. Elasticidades
+                        </h2>
+                        <p className="font-sans text-xs leading-snug">Controla la "sensibilidad" (pendiente) de los
+                            agentes. Analiza quién paga realmente un impuesto (<strong>Incidencia Fiscal</strong>).</p>
+
+                        <div>
+                            <div className="flex justify-between font-mono text-xs font-bold mb-1 text-[#0033CC]">
+                                <span>Demanda (Consumidores)</span>
+                                <span>{dSlope < 0.5 ? 'Muy Elástica' : dSlope> 1.5 ? 'Inelástica' : 'Unitaria'}</span>
+                            </div>
+                            <input type="range" min="0.2" max="3" step="0.1" value={dSlope} onChange={(e)=>
+                            setDSlope(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between font-mono text-xs font-bold mb-1 text-[#E60039]">
+                                <span>Oferta (Productores)</span>
+                                <span>{sSlope < 0.5 ? 'Muy Elástica' : sSlope> 1.5 ? 'Inelástica' : 'Unitaria'}</span>
+                            </div>
+                            <input type="range" min="0.2" max="3" step="0.1" value={sSlope} onChange={(e)=>
+                            setSSlope(Number(e.target.value))} className="w-full accent-[#E60039]" />
+                        </div>
+
+                        <label className="flex items-center gap-2 cursor-pointer pt-3">
+                            <input type="checkbox" checked={showAreas} onChange={()=> setShowAreas(!showAreas)}
+                            className="w-4 h-4 accent-[#111]" />
+                            <span className="font-bold font-mono text-[10px] uppercase">Mostrar Excedentes y Pérdida
+                                Social (PIE)</span>
+                        </label>
+                    </div>
+
+                </div>
+
+                <div className="lg:col-span-8 space-y-6">
+                    <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] relative">
+                        <div
+                            className="absolute top-4 left-4 bg-[#111] text-[#F4F1EA] px-3 py-1 font-mono text-xs font-bold border-2 border-white z-10">
+                            MERCADO & INCIDENCIA FISCAL (U1.2-1.3)</div>
+
+                        <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto">
+                            {drawGrid('gridM')}
+                            <rect width="100%" height="100%" fill="url(#gridM)" />
+
+                            {/* Ejes */}
+                            <g className="font-mono text-xs">
+                                <line x1={pL} y1={pT} x2={pL} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                <line x1={pL} y1={gh-pB} x2={gw-pR} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                <text x={-(gh/2)} y={pL-35} transform="rotate(-90)" textAnchor="middle"
+                                    className="font-bold uppercase">Precio ($)</text>
+                                <text x={(gw+pL)/2} y={gh-15} textAnchor="middle"
+                                    className="font-bold uppercase">Cantidad (Q)</text>
+                                {[5,10,15,20].map(v => (<g key={`y-${v}`}>
+                                    <line x1={pL-4} y1={mapY(v)} x2={pL} y2={mapY(v)} stroke="#111" strokeWidth="2" />
+                                    <text x={pL-8} y={mapY(v)+4} textAnchor="end">{v}</text>
+                                </g>))}
+                                {[5,10,15,20].map(v => (<g key={`x-${v}`}>
+                                    <line x1={mapX(v)} y1={gh-pB} x2={mapX(v)} y2={gh-pB+4} stroke="#111"
+                                        strokeWidth="2" /><text x={mapX(v)} y={gh-pB+18} textAnchor="middle">{v}</text>
+                                </g>))}
+                            </g>
+
+                            {/* Áreas (Surplus y PIE) */}
+                            {showAreas && (
+                            <g>
+                                {escMercado === 'libre' ? (
+                                <>
+                                    <polygon points={`${mapX(0)},${mapY(Pe)} ${mapX(Qe)},${mapY(Pe)}
+                                        ${mapX(0)},${mapY(dInt)}`} fill="#0033CC" opacity="0.15" />
+                                    <polygon points={`${mapX(0)},${mapY(Pe)} ${mapX(Qe)},${mapY(Pe)}
+                                        ${mapX(0)},${mapY(sInt)}`} fill="#E60039" opacity="0.15" />
+                                </>
+                                ) : escMercado === 'impuesto' ? (
+                                <>
+                                    <polygon points={`${mapX(0)},${mapY(Pc)} ${mapX(Qt)},${mapY(Pc)}
+                                        ${mapX(0)},${mapY(dInt)}`} fill="#0033CC" opacity="0.15" />
+                                    <polygon points={`${mapX(0)},${mapY(Pp)} ${mapX(Qt)},${mapY(Pp)}
+                                        ${mapX(0)},${mapY(sInt)}`} fill="#E60039" opacity="0.15" />
+                                    <rect x={mapX(0)} y={mapY(Pc)} width={mapX(Qt)-mapX(0)} height={mapY(Pp)-mapY(Pc)}
+                                        fill="#FFD700" opacity="0.5" />
+                                    <polygon points={`${mapX(Qt)},${mapY(Pc)} ${mapX(Qe)},${mapY(Pe)}
+                                        ${mapX(Qt)},${mapY(Pp)}`} fill="#111" opacity="0.8" />
+                                </>
+                                ) : (
+                                <>
+                                    <polygon points={`${mapX(0)},${mapY(Pc)} ${mapX(Qt)},${mapY(Pc)}
+                                        ${mapX(0)},${mapY(dInt)}`} fill="#0033CC" opacity="0.15" />
+                                    <polygon points={`${mapX(0)},${mapY(Pp)} ${mapX(Qt)},${mapY(Pp)}
+                                        ${mapX(0)},${mapY(sInt)}`} fill="#E60039" opacity="0.15" />
+                                    <polygon points={`${mapX(Qe)},${mapY(Pe)} ${mapX(Qt)},${mapY(Pc)}
+                                        ${mapX(Qt)},${mapY(Pp)}`} fill="#111" opacity="0.8" />
+                                </>
+                                )}
+                            </g>
+                            )}
+
+                            {/* Curvas D y S */}
+                            <line x1={mapX(0)} y1={mapY(dInt)} x2={mapX(dXEnd)} y2={mapY(0)} stroke="#0033CC"
+                                strokeWidth="4" />
+                            <text x={mapX(Math.min(dXEnd, 20)-1)} y={mapY(Math.max(dInt - dSlope*20, 0)) - 10}
+                                className="font-bold fill-[#0033CC] text-lg">D</text>
+
+                            <line x1={mapX(0)} y1={mapY(sInt)} x2={mapX(sXEnd)} y2={mapY(20)} stroke="#E60039"
+                                strokeWidth="4" />
+                            <text x={mapX(Math.min(sXEnd, 20)-1)} y={mapY(Math.min(sInt + sSlope*20, 20)) + 15}
+                                className="font-bold fill-[#E60039] text-lg">O</text>
+
+                            {/* Puntos y Líneas de Equilibrio */}
+                            <circle cx={mapX(Qe)} cy={mapY(Pe)} r="5" fill={escMercado==='libre' ? "#111" : "#999" } />
+
+                            {escMercado !== 'libre' && (
+                            <g>
+                                <line x1={mapX(Qt)} y1={mapY(0)} x2={mapX(Qt)} y2={mapY(Math.max(Pc,Pp))} stroke="#111"
+                                    strokeDasharray="4,4" />
+                                <line x1={mapX(0)} y1={mapY(Pc)} x2={mapX(Qt)} y2={mapY(Pc)} stroke="#0033CC"
+                                    strokeDasharray="4,4" strokeWidth="2" />
+                                <circle cx={mapX(Qt)} cy={mapY(Pc)} r="6" fill="#0033CC" />
+                                <text x={pL + 5} y={mapY(Pc) - 5}
+                                    className="font-bold font-mono text-[10px] fill-[#0033CC]">P. Consumidor</text>
+
+                                <line x1={mapX(0)} y1={mapY(Pp)} x2={mapX(Qt)} y2={mapY(Pp)} stroke="#E60039"
+                                    strokeDasharray="4,4" strokeWidth="2" />
+                                <circle cx={mapX(Qt)} cy={mapY(Pp)} r="6" fill="#E60039" />
+                                <text x={pL + 5} y={mapY(Pp) + 12}
+                                    className="font-bold font-mono text-[10px] fill-[#E60039]">P. Productor</text>
+
+                                {/* Etiqueta PIE */}
+                                {showAreas && <text x={mapX(Qt + (Qe-Qt)/2)} y={mapY(Pe) + 4}
+                                    className="font-bold fill-white text-[10px]" style={{textShadow: '1px 1px 0 #000'
+                                    }}>PIE</text>}
+                            </g>
+                            )}
+                        </svg>
+                    </div>
+
+                    {/* Panel de Análisis de Elasticidad e Impuestos */}
+                    <div className="grid grid-cols-3 gap-0 border-4 border-[#111] shadow-[6px_6px_0_0_#111] bg-white">
+                        <div className="col-span-2 p-4 border-r-4 border-[#111] bg-[#F4F1EA]">
+                            <h3 className="font-serif font-black text-lg mb-2 flex items-center gap-2">
+                                <BookOpen className="w-5 h-5" /> Incidencia Fiscal
+                            </h3>
+                            <p className="font-sans text-xs leading-relaxed text-[#111]">
+                                {escMercado === 'impuesto' ? (
+                                dSlope > sSlope ?
+                                "La Demanda es más inelástica (empinada) que la Oferta. Los consumidores no pueden
+                                escapar fácilmente del mercado, por lo que absorben la MAYOR PARTE de la carga del
+                                impuesto." :
+                                sSlope > dSlope ?
+                                "La Oferta es más inelástica (empinada) que la Demanda. Las fábricas no pueden
+                                reconvertirse fácilmente, por lo que los productores absorben la MAYOR PARTE del
+                                impuesto." :
+                                "La carga del impuesto se reparte equitativamente entre consumidores y productores al
+                                tener la misma elasticidad."
+                                ) : escMercado === 'libre' ? (
+                                "El mercado se vacía naturalmente. Maximización del excedente total. Modifica las
+                                elasticidades y activa un impuesto para ver quién paga el pato."
+                                ) : (
+                                "El subsidio reduce el precio para compradores y lo sube para vendedores. Sin embargo,
+                                el Costo Fiscal (área) es mayor que el beneficio creado, generando Ineficiencia (PIE)."
+                                )}
+                            </p>
+                        </div>
+                        <div className="p-4 flex flex-col justify-center items-center text-center">
+                            <span className="font-mono text-[10px] uppercase font-bold text-gray-500 mb-1">Cantidad
+                                Tranzada</span>
+                            <span className="font-serif text-4xl font-black text-[#111]">{Qt.toFixed(1)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            );
+            };
+
+            // ==========================================
+            // RENDER TAB 2: FPP
+            // ==========================================
+            const renderFPP = () => {
+            const maxAxis = 150;
+            const mapX = (x) => pL + (x / maxAxis) * (gw - pL - pR);
+            const mapY = (y) => gh - pB - (y / maxAxis) * (gh - pB - pT);
+
+            let pathD = `M ${mapX(0)} ${mapY(techY)} `;
+            for (let i = 0; i <= techX; i +=2) { pathD +=`L ${mapX(i)} ${mapY(techY * Math.sqrt(1 - Math.pow(i / techX,
+                2)))} `; } pathD +=`L ${mapX(techX)} ${mapY(0)}`; return ( <div
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
+                <div className="lg:col-span-4 space-y-6">
+                    <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+                        <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Capacidad
+                            Tecnológica</h2>
+                        <p className="font-sans text-xs">Mueve estos valores para simular <strong>Crecimiento
+                                Económico</strong> (desplazamiento de la frontera hacia afuera).</p>
+                        <div>
+                            <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Tech Y
+                                    (Autos)</span><span className="bg-[#111] text-white px-1">{techY}</span></div>
+                            <input type="range" min="50" max="150" value={techY} onChange={(e)=>
+                            setTechY(Number(e.target.value))} className="w-full accent-[#111]" />
+                        </div>
+                        <div>
+                            <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Tech X
+                                    (PCs)</span><span className="bg-[#111] text-white px-1">{techX}</span></div>
+                            <input type="range" min="50" max="150" value={techX} onChange={(e)=>
+                            setTechX(Number(e.target.value))} className="w-full accent-[#111]" />
+                        </div>
+                    </div>
+
+                    <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+                        <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Punto de Producción
+                        </h2>
+                        <div>
+                            <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Producir
+                                    Autos</span><span>{pointY}</span></div>
+                            <input type="range" min="0" max="150" value={pointY} onChange={(e)=>
+                            setPointY(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+                        </div>
+                        <div>
+                            <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Producir
+                                    PCs</span><span>{pointX}</span></div>
+                            <input type="range" min="0" max="150" value={pointX} onChange={(e)=>
+                            setPointX(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+                        </div>
+                    </div>
+
+                    <div className="border-4 border-[#111] shadow-[4px_4px_0_0_#111] p-4 text-white"
+                        style={{backgroundColor: fppColor}}>
+                        <div className="font-mono text-xs font-black uppercase mb-1">Diagnóstico de Estado:</div>
+                        <div className="font-serif text-2xl font-black mb-1 capitalize">{fppStatus}</div>
+                        <div className="font-sans text-xs font-medium">
+                            {fppStatus === 'eficiente' ? "Pleno empleo. Para fabricar más de un bien, debes renunciar al
+                            otro (Costo de Oportunidad)." :
+                            fppStatus === 'ineficiente' ? "Desempleo o recursos ociosos. Puedes producir más de ambos
+                            bienes sin sacrificar nada." :
+                            "Imposible con la tecnología actual. Necesitas crecimiento económico para llegar aquí."}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="lg:col-span-8">
+                    <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative">
+                        <div
+                            className="absolute top-4 left-4 bg-[#111] text-[#F4F1EA] px-3 py-1 font-mono text-xs font-bold border-2 border-white z-10">
+                            FRONTERA DE POSIBILIDADES (U1.1)</div>
+                        <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-[#F4F1EA]">
+                            {drawGrid('gridF')}
+                            <rect width="100%" height="100%" fill="url(#gridF)" />
+                            <g className="font-mono text-xs">
+                                <line x1={pL} y1={pT} x2={pL} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                <line x1={pL} y1={gh-pB} x2={gw-pR} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                <text x={-(gh/2)} y={pL-40} transform="rotate(-90)" textAnchor="middle"
+                                    className="font-bold uppercase">Automóviles (Y)</text>
+                                <text x={(gw+pL)/2} y={gh-15} textAnchor="middle"
+                                    className="font-bold uppercase">Computadoras (X)</text>
+                                {[50,100,150].map(v => (<g key={`y-${v}`}>
+                                    <line x1={pL-4} y1={mapY(v)} x2={pL} y2={mapY(v)} stroke="#111" strokeWidth="2" />
+                                    <text x={pL-8} y={mapY(v)+4} textAnchor="end">{v}</text>
+                                </g>))}
+                                {[50,100,150].map(v => (<g key={`x-${v}`}>
+                                    <line x1={mapX(v)} y1={gh-pB} x2={mapX(v)} y2={gh-pB+4} stroke="#111"
+                                        strokeWidth="2" /><text x={mapX(v)} y={gh-pB+18} textAnchor="middle">{v}</text>
+                                </g>))}
+                            </g>
+                            <path d={`${pathD} L ${mapX(0)} ${mapY(0)} Z`} fill="#111" opacity="0.05" />
+                            <path d={pathD} fill="none" stroke="#111" strokeWidth="4" />
+
+                            <line x1={mapX(0)} y1={mapY(pointY)} x2={mapX(pointX)} y2={mapY(pointY)} stroke={fppColor}
+                                strokeDasharray="4,4" />
+                            <line x1={mapX(pointX)} y1={mapY(0)} x2={mapX(pointX)} y2={mapY(pointY)} stroke={fppColor}
+                                strokeDasharray="4,4" />
+                            <circle cx={mapX(pointX)} cy={mapY(pointY)} r="8" fill={fppColor} stroke="#fff"
+                                strokeWidth="2" />
+                        </svg>
+                    </div>
+                </div>
+                </div>
+                );
+                };
+
+                // ==========================================
+                // RENDER TAB 3: COSTOS EMPRESA (U1.4)
+                // ==========================================
+                const renderCostos = () => {
+                const mapX_cost = (x) => pL + (x / 16) * (gw - pL - pR);
+                const mapY_cost = (y) => gh - pB - (y / 18) * (gh - pB - pT);
+
+                let pathCMg = `M ${mapX_cost(0.1)} ${mapY_cost(0.3*(0.1**2) - 3.2*0.1 + 10.4)} `;
+                let pathCTM = `M ${mapX_cost(2)} ${mapY_cost(0.1*(4) - 1.6*2 + 10.4 + 30/2)} `;
+                let pathCVM = `M ${mapX_cost(0.1)} ${mapY_cost(0.1*(0.1**2) - 1.6*0.1 + 10.4)} `;
+
+                for(let q=0.5; q<=16; q+=0.5) { pathCMg +=`L ${mapX_cost(q)} ${mapY_cost(0.3*q*q - 3.2*q + 10.4)} `; if
+                    (q>=1.5) pathCTM += `L ${mapX_cost(q)} ${mapY_cost(0.1*q*q - 1.6*q + 10.4 + 30/q)} `;
+                    pathCVM += `L ${mapX_cost(q)} ${mapY_cost(0.1*q*q - 1.6*q + 10.4)} `;
+                    }
+
+                    return (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 relative">
+                                <h2 className="font-serif font-black text-2xl mb-4 border-b-4 border-[#111] pb-2">La
+                                    Regla de Oro</h2>
+                                <p className="font-sans text-xs font-medium leading-relaxed mb-4">
+                                    La empresa Competitiva produce donde <strong className="bg-[#FFD700] px-1">P =
+                                        CMg</strong>. Las curvas de Costos Medios (CTM y CVM) tienen forma de U, y el
+                                    CMg SIEMPRE las corta en su punto más bajo.
+                                </p>
+                                <ul className="space-y-2 font-mono text-[10px] font-bold uppercase">
+                                    <li className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-[#0033CC] border border-[#111]"></div> P. Nivelación:
+                                        Mínimo CTM ($7.55)
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-[#E60039] border border-[#111]"></div> P. Cierre:
+                                        Mínimo CVM ($4.00)
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5">
+                                <h2 className="font-serif font-black text-xl mb-4">Simulador de Crisis</h2>
+                                <div className="mb-6">
+                                    <div className="flex justify-between font-mono text-sm font-bold mb-2"><span>Precio
+                                            Dictado ($)</span><span
+                                            className="bg-[#111] text-[#FFD700] px-2">{firmPrice.toFixed(1)}</span>
+                                    </div>
+                                    <input type="range" min="2" max="16" step="0.5" value={firmPrice} onChange={(e)=>
+                                    setFirmPrice(Number(e.target.value))} className="w-full h-3 accent-[#E60039]
+                                    bg-gray-200" />
+                                </div>
+
+                                <div className="p-4 border-4 border-[#111]" style={{backgroundColor: firmStatusColor}}>
+                                    <div
+                                        className="font-mono text-[10px] font-black uppercase mb-1 text-[#111] bg-white/60 inline-block px-1">
+                                        Decisión a Corto Plazo</div>
+                                    <div className="font-serif text-xl font-black leading-tight text-[#111] mb-1">
+                                        {firmStatus}</div>
+                                </div>
+
+                                <div className="mt-4 grid grid-cols-2 gap-2 text-center">
+                                    <div className="border-2 border-[#111] bg-[#F4F1EA] p-2">
+                                        <div className="font-mono text-[10px] font-bold uppercase">Cant. (Q*)</div>
+                                        <div className="font-serif font-black text-2xl">{firmQ > 0 ? firmQ.toFixed(1) :
+                                            '0.0'}</div>
+                                    </div>
+                                    <div className="border-2 border-[#111] bg-[#F4F1EA] p-2">
+                                        <div className="font-mono text-[10px] font-bold uppercase">Beneficio</div>
+                                        <div className="font-serif font-black text-2xl" style={{color:
+                                            firmStatusColor}}>{firmQ > 0 ? currentProfit.toFixed(1) : '-30'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-8">
+                            <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative">
+                                <div
+                                    className="absolute top-4 left-4 bg-[#111] text-[#F4F1EA] px-3 py-1 font-mono text-xs font-bold border-2 border-white z-10">
+                                    ESTRUCTURA DE COSTOS Y CIERRE (U1.4)</div>
+                                <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-[#F9F6F0]">
+                                    {drawGrid('gridC')}
+                                    <rect width="100%" height="100%" fill="url(#gridC)" />
+                                    <g className="font-mono text-xs select-none">
+                                        <line x1={pL} y1={pT} x2={pL} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                        <line x1={pL} y1={gh-pB} x2={gw-pR} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                        {[4,8,12,16].map(v => (<g key={`y-${v}`}>
+                                            <line x1={pL-6} y1={mapY_cost(v)} x2={pL} y2={mapY_cost(v)} stroke="#111"
+                                                strokeWidth="2" /><text x={pL-10} y={mapY_cost(v)+4}
+                                                textAnchor="end">{v}</text>
+                                        </g>))}
+                                        {[4,8,12,16].map(v => (<g key={`x-${v}`}>
+                                            <line x1={mapX_cost(v)} y1={gh-pB} x2={mapX_cost(v)} y2={gh-pB+6}
+                                                stroke="#111" strokeWidth="2" /><text x={mapX_cost(v)} y={gh-pB+20}
+                                                textAnchor="middle">{v}</text>
+                                        </g>))}
+                                    </g>
+
+                                    {firmQ > 0 && (
+                                    <polygon points={`${mapX_cost(0)},${mapY_cost(firmPrice)}
+                                        ${mapX_cost(firmQ)},${mapY_cost(firmPrice)}
+                                        ${mapX_cost(firmQ)},${mapY_cost(currentCTM)}
+                                        ${mapX_cost(0)},${mapY_cost(currentCTM)}`} fill={firmPrice>= currentCTM ?
+                                        "#00A854" : "#FFD700"} opacity="0.3" />
+                                        )}
+
+                                        <path d={pathCVM} fill="none" stroke="#9333EA" strokeWidth="3"
+                                            strokeDasharray="4,4" />
+                                        <text x={mapX_cost(14)} y={mapY_cost(8.5)}
+                                            className="fill-purple-800 font-bold font-serif">CVM</text>
+                                        <path d={pathCTM} fill="none" stroke="#0033CC" strokeWidth="3" />
+                                        <text x={mapX_cost(14)} y={mapY_cost(12.5)}
+                                            className="fill-blue-800 font-bold font-serif">CTM</text>
+                                        <path d={pathCMg} fill="none" stroke="#111" strokeWidth="4" />
+                                        <text x={mapX_cost(11.5)} y={mapY_cost(16)}
+                                            className="fill-black font-bold font-serif">CMg</text>
+
+                                        {/* Puntos Críticos Analíticos */}
+                                        <g opacity={firmPrice < minCTM_P ? "1" : "0.5" }>
+                                            <circle cx={mapX_cost(minCVM_Q)} cy={mapY_cost(minCVM_P)} r="6"
+                                                fill="#E60039" stroke="#111" strokeWidth="2" />
+                                            <path d={`M ${mapX_cost(minCVM_Q)} ${mapY_cost(minCVM_P)} L
+                                                ${mapX_cost(minCVM_Q+1.5)} ${mapY_cost(minCVM_P-2)}`} stroke="#E60039"
+                                                strokeWidth="2" />
+                                            <text x={mapX_cost(minCVM_Q+1.7)} y={mapY_cost(minCVM_P-2.2)}
+                                                className="font-bold font-mono text-[10px] fill-[#E60039]">P.
+                                                CIERRE</text>
+                                        </g>
+                                        <g opacity={firmPrice>= minCVM_P ? "1" : "0.5"}>
+                                            <circle cx={mapX_cost(minCTM_Q)} cy={mapY_cost(minCTM_P)} r="6"
+                                                fill="#0033CC" stroke="#111" strokeWidth="2" />
+                                            <path d={`M ${mapX_cost(minCTM_Q)} ${mapY_cost(minCTM_P)} L
+                                                ${mapX_cost(minCTM_Q+1.5)} ${mapY_cost(minCTM_P-2)}`} stroke="#0033CC"
+                                                strokeWidth="2" />
+                                            <text x={mapX_cost(minCTM_Q+1.7)} y={mapY_cost(minCTM_P-2.2)}
+                                                className="font-bold font-mono text-[10px] fill-[#0033CC]">P.
+                                                NIVELACIÓN</text>
+                                        </g>
+
+                                        <line x1={mapX_cost(0)} y1={mapY_cost(firmPrice)} x2={gw-pR}
+                                            y2={mapY_cost(firmPrice)} stroke="#FFD700" strokeWidth="4" />
+                                        <text x={gw-pR-40} y={mapY_cost(firmPrice)-6}
+                                            className="fill-[#b8860b] font-bold font-mono">P=IMg</text>
+
+                                        {firmQ > 0 && (
+                                        <g>
+                                            <line x1={mapX_cost(firmQ)} y1={mapY_cost(0)} x2={mapX_cost(firmQ)}
+                                                y2={mapY_cost(Math.max(firmPrice, currentCTM))} stroke="#111"
+                                                strokeDasharray="4,4" />
+                                            <circle cx={mapX_cost(firmQ)} cy={mapY_cost(firmPrice)} r="6" fill="#111" />
+                                        </g>
+                                        )}
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    );
+                    };
+
+                    // ==========================================
+                    // RENDER TAB 4: MONOPOLIOS (U1.6)
+                    // ==========================================
+                    const renderMonopolio = () => {
+                    const mapX_mono = (x) => pL + (x / 24) * (gw - pL - pR);
+                    const mapY_mono = (y) => gh - pB - (y / 24) * (gh - pB - pT);
+                    const mapX_nat = (x) => pL + (x / 50) * (gw - pL - pR);
+                    const mapY_nat = (y) => gh - pB - (y / 26) * (gh - pB - pT);
+
+                    return (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
+                        <div className="lg:col-span-4 space-y-6">
+                            <div
+                                className="flex border-4 border-[#111] shadow-[6px_6px_0_0_#111] font-mono text-sm font-bold bg-white">
+                                <button onClick={()=> setMonoType('tradicional')} className={`flex-1 p-3 uppercase
+                                    ${monoType === 'tradicional' ? 'bg-[#111] text-[#FFD700]' :
+                                    'hover:bg-gray-100'}`}>Tradicional</button>
+                                <button onClick={()=> setMonoType('natural')} className={`flex-1 p-3 uppercase
+                                    border-l-4 border-[#111] ${monoType === 'natural' ? 'bg-[#0033CC] text-white' :
+                                    'hover:bg-gray-100'}`}>Natural</button>
+                            </div>
+
+                            {monoType === 'tradicional' ? (
+                            <div
+                                className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+                                <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Maximización
+                                    M. Tradicional</h2>
+                                <p className="font-sans text-xs">El monopolista restringe la producción donde <strong
+                                        className="bg-[#111] text-white px-1">IMg = CMg</strong>. ¡Pero cuidado! Si la
+                                    demanda es débil, puede tener pérdidas.</p>
+                                <div className="pt-4">
+                                    <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Demanda
+                                            Máx</span><span className="bg-[#111] text-white px-1">{monoDemand}</span>
+                                    </div>
+                                    <input type="range" min="10" max="24" step="1" value={monoDemand} onChange={(e)=>
+                                    setMonoDemand(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+                                </div>
+                                <div className="p-4 border-4 border-[#111] bg-white text-center mt-4">
+                                    <div className="font-mono text-xs font-bold uppercase mb-1">Resultado</div>
+                                    <div className={`font-serif text-2xl font-black ${profit_trad < 0 ? 'text-[#E60039]'
+                                        : 'text-[#00A854]' }`}>
+                                        ${profit_trad.toFixed(1)}
+                                    </div>
+                                </div>
+                            </div>
+                            ) : (
+                            <div
+                                className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#0033CC] p-5 space-y-4">
+                                <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Monopolio
+                                    Natural</h2>
+                                <p className="font-sans text-xs">Costos Fijos inmensos $\rightarrow$ CTM siempre cae.
+                                    ¿Cómo lo regula el Estado?</p>
+                                <div className="space-y-2 mt-4">
+                                    <button onClick={()=> setNaturalReg('privado')} className={`w-full p-3 border-4
+                                        border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between
+                                        ${naturalReg === 'privado' ? 'bg-[#00A854] text-[#111]' : 'bg-white
+                                        hover:bg-gray-100'}`}>
+                                        <span>1. Monopolista Libre</span><span>(Gana)</span>
+                                    </button>
+                                    <button onClick={()=> setNaturalReg('eficiente')} className={`w-full p-3 border-4
+                                        border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between
+                                        ${naturalReg === 'eficiente' ? 'bg-[#E60039] text-white' : 'bg-white
+                                        hover:bg-gray-100'}`}>
+                                        <span>2. Regulación P = CMg</span><span>(Pierde)</span>
+                                    </button>
+                                </div>
+                                {naturalReg === 'eficiente' && (
+                                <div
+                                    className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#E60039]">
+                                    ¡P=CMg fuerza al precio por debajo del CTM! Requiere subsidios estatales para no
+                                    quebrar.
+                                </div>
+                                )}
+                            </div>
+                            )}
+                        </div>
+
+                        <div className="lg:col-span-8">
+                            <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative">
+                                <div
+                                    className="absolute top-4 left-4 bg-[#111] text-[#F4F1EA] px-3 py-1 font-mono text-xs font-bold border-2 border-white z-10">
+                                    {monoType === 'tradicional' ? 'EQUILIBRIO, GANANCIAS Y PÉRDIDAS (U1.6)' : 'EL DILEMA
+                                    DE LA REGULACIÓN (U1.6)'}
+                                </div>
+
+                                {monoType === 'tradicional' ? (
+                                <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-[#F9F6F0]">
+                                    {drawGrid('gridT')}
+                                    <rect width="100%" height="100%" fill="url(#gridT)" />
+                                    <g className="font-mono text-xs select-none">
+                                        <line x1={pL} y1={pT} x2={pL} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                        <line x1={pL} y1={gh-pB} x2={gw-pR} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                        {[6,12,18,24].map(v => (<g key={`y-${v}`}>
+                                            <line x1={pL-6} y1={mapY_mono(v)} x2={pL} y2={mapY_mono(v)} stroke="#111" />
+                                            <text x={pL-10} y={mapY_mono(v)+4} textAnchor="end">{v}</text>
+                                        </g>))}
+                                        {[6,12,18,24].map(v => (<g key={`x-${v}`}>
+                                            <line x1={mapX_mono(v)} y1={gh-pB} x2={mapX_mono(v)} y2={gh-pB+6}
+                                                stroke="#111" /><text x={mapX_mono(v)} y={gh-pB+20}
+                                                textAnchor="middle">{v}</text>
+                                        </g>))}
+                                    </g>
+
+                                    {q_trad > 0 && (
+                                    <polygon points={`${mapX_mono(0)},${mapY_mono(p_trad)}
+                                        ${mapX_mono(q_trad)},${mapY_mono(p_trad)}
+                                        ${mapX_mono(q_trad)},${mapY_mono(ctm_trad)}
+                                        ${mapX_mono(0)},${mapY_mono(ctm_trad)}`} fill={profit_trad < 0 ? "#E60039"
+                                        : "#00A854" } opacity="0.3" />
+                                    )}
+
+                                    <line x1={mapX_mono(0)} y1={mapY_mono(monoDemand)} x2={mapX_mono(monoDemand)}
+                                        y2={mapY_mono(0)} stroke="#0033CC" strokeWidth="4" />
+                                    <line x1={mapX_mono(0)} y1={mapY_mono(monoDemand)} x2={mapX_mono(monoDemand/2)}
+                                        y2={mapY_mono(0)} stroke="#0033CC" strokeWidth="4" strokeDasharray="6,4" />
+
+                                    <path d={`M ${mapX_mono(0)} ${mapY_mono(2)} L ${mapX_mono(22)} ${mapY_mono(24)}`}
+                                        fill="none" stroke="#111" strokeWidth="4" />
+
+                                    {/* Generar Path CTMe */}
+                                    <path d={`M ${mapX_mono(1)} ${mapY_mono(2 + 0.5 + 20/1)} ` + Array.from({length:
+                                        21}, (_, i)=> i + 2).map(q => `L ${mapX_mono(q)} ${mapY_mono(2 + 0.5*q +
+                                        20/q)}`).join(' ')} fill="none" stroke="#9333EA" strokeWidth="3" />
+
+                                        <text x={mapX_mono(monoDemand-2)} y={mapY_mono(3)}
+                                            className="fill-blue-800 font-bold font-serif text-lg">D</text>
+                                        <text x={mapX_mono(monoDemand/2 - 1)} y={mapY_mono(1)}
+                                            className="fill-blue-800 font-bold font-serif">IMg</text>
+                                        <text x={mapX_mono(20)} y={mapY_mono(23)}
+                                            className="fill-black font-bold font-serif text-lg">CMg</text>
+                                        <text x={mapX_mono(18)} y={mapY_mono(14)}
+                                            className="fill-purple-800 font-bold font-serif text-lg">CTM</text>
+
+                                        {q_trad > 0 && (
+                                        <g>
+                                            <line x1={mapX_mono(q_trad)} y1={mapY_mono(0)} x2={mapX_mono(q_trad)}
+                                                y2={mapY_mono(Math.max(p_trad, ctm_trad))} stroke="#111"
+                                                strokeDasharray="4,4" />
+                                            <line x1={mapX_mono(0)} y1={mapY_mono(p_trad)} x2={mapX_mono(q_trad)}
+                                                y2={mapY_mono(p_trad)} stroke="#111" strokeDasharray="4,4" />
+                                            <circle cx={mapX_mono(q_trad)} cy={mapY_mono(p_trad)} r="6" fill="#111" />
+                                            <circle cx={mapX_mono(q_trad)} cy={mapY_mono(2 + q_trad)} r="5"
+                                                fill="#E60039" />
+                                        </g>
+                                        )}
+                                </svg>
+                                ) : (
+                                <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-[#F9F6F0]">
+                                    {drawGrid('gridN')}
+                                    <rect width="100%" height="100%" fill="url(#gridN)" />
+                                    <g className="font-mono text-xs select-none">
+                                        <line x1={pL} y1={pT} x2={pL} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                        <line x1={pL} y1={gh-pB} x2={gw-pR} y2={gh-pB} stroke="#111" strokeWidth="3" />
+                                        {[4,8,12,16,20,24].map(v => (<g key={`y-${v}`}>
+                                            <line x1={pL-6} y1={mapY_nat(v)} x2={pL} y2={mapY_nat(v)} stroke="#111" />
+                                            <text x={pL-10} y={mapY_nat(v)+4} textAnchor="end">{v}</text>
+                                        </g>))}
+                                        {[10,20,30,40,50].map(v => (<g key={`x-${v}`}>
+                                            <line x1={mapX_nat(v)} y1={gh-pB} x2={mapX_nat(v)} y2={gh-pB+6}
+                                                stroke="#111" /><text x={mapX_nat(v)} y={gh-pB+20}
+                                                textAnchor="middle">{v}</text>
+                                        </g>))}
+                                    </g>
+
+                                    <polygon points={`${mapX_nat(0)},${mapY_nat(p_nat)}
+                                        ${mapX_nat(q_nat)},${mapY_nat(p_nat)} ${mapX_nat(q_nat)},${mapY_nat(ctm_nat)}
+                                        ${mapX_nat(0)},${mapY_nat(ctm_nat)}`} fill={profit_nat>= 0 ? "#00A854" :
+                                        "#E60039"} opacity="0.4" />
+
+                                        <line x1={mapX_nat(0)} y1={mapY_nat(24)} x2={mapX_nat(48)} y2={mapY_nat(0)}
+                                            stroke="#0033CC" strokeWidth="4" />
+                                        <line x1={mapX_nat(0)} y1={mapY_nat(24)} x2={mapX_nat(24)} y2={mapY_nat(0)}
+                                            stroke="#0033CC" strokeWidth="4" strokeDasharray="6,4" />
+                                        <line x1={mapX_nat(0)} y1={mapY_nat(4)} x2={mapX_nat(50)} y2={mapY_nat(4)}
+                                            stroke="#111" strokeWidth="4" />
+                                        <path d={`M ${mapX_nat(2)} ${mapY_nat(4 + 160/2)} ` + Array.from({length: 48},
+                                            (_, i)=> i + 3).map(q => `L ${mapX_nat(q)} ${mapY_nat(4 + 160/q)}`).join('
+                                            ')} fill="none" stroke="#9333EA" strokeWidth="3" />
+
+                                            <text x={mapX_nat(45)} y={mapY_nat(2)}
+                                                className="fill-blue-800 font-bold font-serif text-lg">D</text>
+                                            <text x={mapX_nat(23)} y={mapY_nat(2)}
+                                                className="fill-blue-800 font-bold font-serif text-lg">IMg</text>
+                                            <text x={mapX_nat(42)} y={mapY_nat(3.5)}
+                                                className="fill-black font-bold font-serif text-lg">CMg</text>
+                                            <text x={mapX_nat(38)} y={mapY_nat(9)}
+                                                className="fill-purple-800 font-bold font-serif text-lg">CTMe</text>
+
+                                            <line x1={mapX_nat(q_nat)} y1={mapY_nat(0)} x2={mapX_nat(q_nat)}
+                                                y2={mapY_nat(Math.max(p_nat, ctm_nat))} stroke="#111"
+                                                strokeDasharray="4,4" />
+                                            <line x1={mapX_nat(0)} y1={mapY_nat(p_nat)} x2={mapX_nat(q_nat)}
+                                                y2={mapY_nat(p_nat)} stroke="#111" strokeDasharray="4,4" />
+                                            <circle cx={mapX_nat(q_nat)} cy={mapY_nat(p_nat)} r="7"
+                                                fill={naturalReg==='privado' ? "#111" : "#E60039" } />
+                                </svg>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    );
+                    };
+
+                    // ==========================================
+                    // MAIN APP WRAPPER
+                    // ==========================================
+                    return (
+                    <div
+                        className="min-h-screen bg-[#E5E0D8] p-4 md:p-8 font-sans text-[#111] selection:bg-[#FF3366] selection:text-white pb-20">
+                        <div className="max-w-6xl mx-auto space-y-8">
+
+                            {/* HEADER NEO-BRUTALISTA */}
+                            <header
+                                className="bg-[#F4F1EA] border-4 border-[#111] shadow-[8px_8px_0_0_#111] p-6 relative overflow-hidden">
+                                <div
+                                    className="absolute -top-10 -right-10 p-4 opacity-5 font-serif text-[120px] font-black italic pointer-events-none leading-none">
+                                    ECON</div>
+                                <div className="relative z-10 flex flex-col gap-6">
+                                    <div>
+                                        <div
+                                            className="inline-block bg-[#111] text-[#FFD700] px-3 py-1 font-mono text-xs font-bold tracking-widest uppercase mb-4 border-2 border-[#111]">
+                                            Master Suite v4.0
+                                        </div>
+                                        <h1
+                                            className="text-4xl md:text-5xl font-black font-serif tracking-tight leading-none">
+                                            Microeconomía <span
+                                                className="text-[#FF3366] underline decoration-8 decoration-[#111] underline-offset-4">Interactiva</span>
+                                        </h1>
+                                    </div>
+
+                                    {/* NAVEGACIÓN TABS */}
+                                    <div
+                                        className="grid grid-cols-2 md:grid-cols-4 gap-0 w-full border-4 border-[#111] bg-white">
+                                        {[
+                                        { id: 'mercado', label: '1. Mercado e Incidencia' },
+                                        { id: 'fpp', label: '2. Frontera P.P.' },
+                                        { id: 'costos', label: '3. Teoría Empresa' },
+                                        { id: 'monopolio', label: '4. Monopolios' }
+                                        ].map(tab => (
+                                        <button key={tab.id} onClick={()=> setActiveTab(tab.id)}
+                                            className={`px-3 py-4 font-bold font-mono text-[10px] md:text-xs uppercase
+                                            transition-all border-r-4 border-[#111] last:border-r-0
+                                            ${activeTab === tab.id ? 'bg-[#111] text-[#FFD700]' : 'bg-transparent
+                                            text-[#111] hover:bg-[#E5E0D8]'}`}>
+                                            {tab.label}
+                                        </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </header>
+
+                            {/* CONTENT */}
+                            <main>
+                                {activeTab === 'mercado' && renderMercado()}
+                                {activeTab === 'fpp' && renderFPP()}
+                                {activeTab === 'costos' && renderCostos()}
+                                {activeTab === 'monopolio' && renderMonopolio()}
+                            </main>
+
+                        </div>
+                    </div>
+                    );
+                    };
