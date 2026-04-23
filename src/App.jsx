@@ -17,7 +17,7 @@ const App = () => {
           <div className="relative z-10 flex flex-col gap-6">
             <div>
               <div className="inline-block bg-[#111] text-[#FFD700] px-3 py-1 font-mono text-xs font-bold tracking-widest uppercase mb-4 border-2 border-[#111]">
-                Master Suite v4.0
+                EcoUtn 1.0
               </div>
               <h1 className="text-4xl md:text-5xl font-black font-serif tracking-tight leading-none">
                 Microeconomía <span className="text-[#FF3366] underline decoration-8 decoration-[#111] underline-offset-4">Interactiva</span>
@@ -52,6 +52,9 @@ const App = () => {
           {activeTab === 'monopolio' && <Monopolio />}
         </main>
         
+        <footer className="text-center py-6 font-mono text-xs font-bold uppercase tracking-widest opacity-60">
+          Laburado duramente por Pino
+        </footer>
       </div>
     </div>
   );
