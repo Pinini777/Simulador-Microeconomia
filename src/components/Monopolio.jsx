@@ -162,7 +162,12 @@ const Monopolio = () => {
               </g>
 
               {q_trad > 0 && showArea && (
-                <polygon points={`${mapX_mono(0)},${mapY_mono(p_trad)} ${mapX_mono(q_trad)},${mapY_mono(p_trad)} ${mapX_mono(q_trad)},${mapY_mono(ctm_trad)} ${mapX_mono(0)},${mapY_mono(ctm_trad)}`} fill={profit_trad < 0 ? "#E60039" : "#00A854"} opacity="0.3" />
+                <g>
+                  <polygon points={`${mapX_mono(0)},${mapY_mono(p_trad)} ${mapX_mono(q_trad)},${mapY_mono(p_trad)} ${mapX_mono(q_trad)},${mapY_mono(ctm_trad)} ${mapX_mono(0)},${mapY_mono(ctm_trad)}`} fill={profit_trad < 0 ? "#E60039" : "#00A854"} opacity="0.3" />
+                  <text x={mapX_mono(q_trad / 2)} y={(mapY_mono(p_trad) + mapY_mono(ctm_trad)) / 2 + 5} textAnchor="middle" className={`font-bold text-[12px] uppercase ${profit_trad < 0 ? 'fill-[#E60039]' : 'fill-[#00A854]'}`} style={{filter: 'brightness(0.6)'}}>
+                    {profit_trad < 0 ? 'PÉRDIDA' : 'GANANCIA'}
+                  </text>
+                </g>
               )}
 
               {showDemanda && (
@@ -209,8 +214,13 @@ const Monopolio = () => {
                 </g>))}
               </g>
 
-              {showArea && (
-                <polygon points={`${mapX_nat(0)},${mapY_nat(p_nat)} ${mapX_nat(q_nat)},${mapY_nat(p_nat)} ${mapX_nat(q_nat)},${mapY_nat(ctm_nat)} ${mapX_nat(0)},${mapY_nat(ctm_nat)}`} fill={profit_nat >= 0 ? "#00A854" : "#E60039"} opacity="0.4" />
+              {showArea && profit_nat !== 0 && (
+                <g>
+                  <polygon points={`${mapX_nat(0)},${mapY_nat(p_nat)} ${mapX_nat(q_nat)},${mapY_nat(p_nat)} ${mapX_nat(q_nat)},${mapY_nat(ctm_nat)} ${mapX_nat(0)},${mapY_nat(ctm_nat)}`} fill={profit_nat > 0 ? "#00A854" : "#E60039"} opacity="0.4" />
+                  <text x={mapX_nat(q_nat / 2)} y={(mapY_nat(p_nat) + mapY_nat(ctm_nat)) / 2 + 5} textAnchor="middle" className={`font-bold text-[12px] uppercase ${profit_nat < 0 ? 'fill-[#E60039]' : 'fill-[#00A854]'}`} style={{filter: 'brightness(0.6)'}}>
+                    {profit_nat < 0 ? 'PÉRDIDA' : 'GANANCIA'}
+                  </text>
+                </g>
               )}
 
               {showDemanda && (
