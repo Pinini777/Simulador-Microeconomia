@@ -33,6 +33,19 @@ const Mercado = () => {
   const [isDInelastic, setIsDInelastic] = useState(false);
   const [isSInelastic, setIsSInelastic] = useState(false);
 
+  const handleReset = () => {
+    setDInt(16);
+    setSInt(2);
+    setDSlope(1);
+    setSSlope(1);
+    setIntervencionVal(4);
+    setShiftD(0);
+    setShiftS(0);
+    setIsDInelastic(false);
+    setIsSInelastic(false);
+    setEscMercado('libre');
+  };
+
   const calc = useMemo(() => {
     return calcularMercado(dInt, dSlope, sInt, sSlope, escMercado, intervencionVal, shiftD, shiftS, isDInelastic, isSInelastic);
   }, [dInt, dSlope, sInt, sSlope, escMercado, intervencionVal, shiftD, shiftS, isDInelastic, isSInelastic]);
@@ -51,9 +64,14 @@ const Mercado = () => {
       <div className="lg:col-span-4 space-y-6">
         {/* Panel 1: Controles Principales */}
         <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
-            <Scale className="w-5 h-5" /> 1. El Mercado
-          </h2>
+          <div className="flex justify-between items-center border-b-4 border-[#111] pb-2">
+            <h2 className="font-serif font-black text-xl flex items-center gap-2">
+              <Scale className="w-5 h-5" /> 1. El Mercado
+            </h2>
+            <button onClick={handleReset} className="font-mono text-[9px] uppercase font-bold bg-[#E60039] text-white px-2 py-1 border-2 border-[#111] hover:bg-black transition-colors" title="Restablecer todos los valores">
+              Restablecer
+            </button>
+          </div>
           <div className="flex gap-2 font-mono text-xs uppercase font-bold">
             {['libre', 'impuesto', 'subsidio'].map(t => (
               <button key={t} onClick={() => setEscMercado(t)} className={`flex-1 p-2 border-2 border-[#111] ${escMercado === t ? 'bg-[#111] text-[#FFD700]' : 'hover:bg-gray-100'}`}>
