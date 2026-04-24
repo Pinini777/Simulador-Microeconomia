@@ -27,7 +27,7 @@ const Monopolio = () => {
 
   const { tradicional, natural } = calc;
   const q_trad = tradicional.q, p_trad = tradicional.p, ctm_trad = tradicional.ctm, profit_trad = tradicional.profit;
-  const q_nat = natural.q, p_nat = natural.p, ctm_nat = natural.ctm, profit_nat = natural.profit;
+  const { q: q_nat, p: p_nat, ctm: ctm_nat, profit: profit_nat, d_int, d_slope } = natural;
 
   const mapX_mono = (x) => pL + (x / 24) * (gw - pL - pR);
   const mapY_mono = (y) => gh - pB - (y / 24) * (gh - pB - pT);
@@ -79,13 +79,29 @@ const Monopolio = () => {
               <button onClick={() => setNaturalReg('privado')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'privado' ? 'bg-[#00A854] text-[#111]' : 'bg-white hover:bg-gray-100'}`}>
                 <span>1. Monopolista Libre</span><span>(Gana)</span>
               </button>
+              <button onClick={() => setNaturalReg('libre_pierde')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'libre_pierde' ? 'bg-[#FFD700] text-[#111]' : 'bg-white hover:bg-gray-100'}`}>
+                <span>2. Monopolista Libre</span><span>(Pierde)</span>
+              </button>
+              <button onClick={() => setNaturalReg('regulacion_cme')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'regulacion_cme' ? 'bg-[#0033CC] text-white' : 'bg-white hover:bg-gray-100'}`}>
+                <span>3. Regulación P=CMe</span><span>(Neutro)</span>
+              </button>
               <button onClick={() => setNaturalReg('eficiente')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'eficiente' ? 'bg-[#E60039] text-white' : 'bg-white hover:bg-gray-100'}`}>
-                <span>2. Regulación P = CMg</span><span>(Pierde)</span>
+                <span>4. Regulación P=CMg</span><span>(Pierde)</span>
               </button>
             </div>
             {naturalReg === 'eficiente' && (
               <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#E60039]">
                 ¡P=CMg fuerza al precio por debajo del CTM! Requiere subsidios estatales para no quebrar.
+              </div>
+            )}
+            {naturalReg === 'libre_pierde' && (
+              <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#FFD700]">
+                La demanda no alcanza a cubrir los costos medios ni siquiera maximizando beneficios.
+              </div>
+            )}
+            {naturalReg === 'regulacion_cme' && (
+              <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#0033CC]">
+                Regulación P=CMe: no hay beneficios extra, pero la empresa no requiere subsidios para operar.
               </div>
             )}
           </div>
@@ -199,10 +215,10 @@ const Monopolio = () => {
 
               {showDemanda && (
                 <g>
-                  <line x1={mapX_nat(0)} y1={mapY_nat(24)} x2={mapX_nat(48)} y2={mapY_nat(0)} stroke="#0033CC" strokeWidth="4" />
-                  <line x1={mapX_nat(0)} y1={mapY_nat(24)} x2={mapX_nat(24)} y2={mapY_nat(0)} stroke="#0033CC" strokeWidth="4" strokeDasharray="6,4" />
-                  <text x={mapX_nat(45)} y={mapY_nat(2)} className="fill-blue-800 font-bold font-serif text-lg">D</text>
-                  <text x={mapX_nat(23)} y={mapY_nat(2)} className="fill-blue-800 font-bold font-serif text-lg">IMg</text>
+                  <line x1={mapX_nat(0)} y1={mapY_nat(d_int)} x2={mapX_nat(d_int/d_slope)} y2={mapY_nat(0)} stroke="#0033CC" strokeWidth="4" />
+                  <line x1={mapX_nat(0)} y1={mapY_nat(d_int)} x2={mapX_nat(d_int/(d_slope*2))} y2={mapY_nat(0)} stroke="#0033CC" strokeWidth="4" strokeDasharray="6,4" />
+                  <text x={mapX_nat((d_int/d_slope)-3)} y={mapY_nat(2)} className="fill-blue-800 font-bold font-serif text-lg">D</text>
+                  <text x={mapX_nat((d_int/(d_slope*2))-1)} y={mapY_nat(2)} className="fill-blue-800 font-bold font-serif text-lg">IMg</text>
                 </g>
               )}
 
