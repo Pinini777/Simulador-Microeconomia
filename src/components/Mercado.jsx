@@ -149,12 +149,15 @@ const Mercado = () => {
                     <polygon points={`${mapX(0)},${mapY(Pc)} ${mapX(Qt)},${mapY(Pc)} ${mapX(0)},${mapY(dInt)}`} fill="#0033CC" opacity="0.15" />
                     <polygon points={`${mapX(0)},${mapY(Pp)} ${mapX(Qt)},${mapY(Pp)} ${mapX(0)},${mapY(sInt)}`} fill="#E60039" opacity="0.15" />
                     <rect x={mapX(0)} y={mapY(Pc)} width={mapX(Qt)-mapX(0)} height={mapY(Pp)-mapY(Pc)} fill="#FFD700" opacity="0.5" />
+                    <text x={mapX(Qt/2)} y={(mapY(Pc) + mapY(Pp))/2 + 4} textAnchor="middle" className="font-bold fill-[#b8860b] text-[10px] uppercase">Recaudación</text>
                     <polygon points={`${mapX(Qt)},${mapY(Pc)} ${mapX(Qe)},${mapY(Pe)} ${mapX(Qt)},${mapY(Pp)}`} fill="#111" opacity="0.8" />
                   </>
                 ) : (
                   <>
                     <polygon points={`${mapX(0)},${mapY(Pc)} ${mapX(Qt)},${mapY(Pc)} ${mapX(0)},${mapY(dInt)}`} fill="#0033CC" opacity="0.15" />
                     <polygon points={`${mapX(0)},${mapY(Pp)} ${mapX(Qt)},${mapY(Pp)} ${mapX(0)},${mapY(sInt)}`} fill="#E60039" opacity="0.15" />
+                    <rect x={mapX(0)} y={mapY(Pp)} width={mapX(Qt)-mapX(0)} height={mapY(Pc)-mapY(Pp)} fill="#FFD700" opacity="0.5" />
+                    <text x={mapX(Qt/2)} y={(mapY(Pp) + mapY(Pc))/2 + 4} textAnchor="middle" className="font-bold fill-[#b8860b] text-[10px] uppercase">Gasto Estatal</text>
                     <polygon points={`${mapX(Qe)},${mapY(Pe)} ${mapX(Qt)},${mapY(Pc)} ${mapX(Qt)},${mapY(Pp)}`} fill="#111" opacity="0.8" />
                   </>
                 )}
