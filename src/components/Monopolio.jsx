@@ -74,7 +74,7 @@ const Monopolio = () => {
         ) : (
           <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#0033CC] p-5 space-y-4">
             <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Monopolio Natural</h2>
-            <p className="font-sans text-xs">Costos Fijos inmensos $\rightarrow$ CTM siempre cae. ¿Cómo lo regula el Estado?</p>
+            <p className="font-sans text-xs">Costos Fijos inmensos → CTM siempre cae. ¿Cómo lo regula el Estado?</p>
             <div className="space-y-2 mt-4">
               <button onClick={() => setNaturalReg('privado')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'privado' ? 'bg-[#00A854] text-[#111]' : 'bg-white hover:bg-gray-100'}`}>
                 <span>1. Monopolista Libre</span><span>(Gana)</span>
