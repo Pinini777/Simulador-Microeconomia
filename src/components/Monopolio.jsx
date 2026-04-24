@@ -145,7 +145,7 @@ const Monopolio = () => {
           </div>
 
           {monoType === 'tradicional' ? (
-            <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-[#F9F6F0]">
+            <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-white">
               {drawGrid('gridT')}
               <rect width="100%" height="100%" fill="url(#gridT)" />
               <g className="font-mono text-xs select-none">
@@ -198,7 +198,7 @@ const Monopolio = () => {
               )}
             </svg>
           ) : (
-            <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-[#F9F6F0]">
+            <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-white">
               {drawGrid('gridN')}
               <rect width="100%" height="100%" fill="url(#gridN)" />
               <g className="font-mono text-xs select-none">

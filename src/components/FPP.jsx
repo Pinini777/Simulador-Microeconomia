@@ -105,7 +105,7 @@ const FPP = () => {
       <div className="lg:col-span-8">
         <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative">
           <div className="absolute top-4 left-4 bg-[#111] text-[#F4F1EA] px-3 py-1 font-mono text-xs font-bold border-2 border-white z-10">FRONTERA DE POSIBILIDADES</div>
-          <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-[#F4F1EA]">
+          <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-white">
             {drawGrid('gridF')}
             <rect width="100%" height="100%" fill="url(#gridF)" />
             <g className="font-mono text-xs">
