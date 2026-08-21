@@ -19,7 +19,9 @@ export const calcularMercado = (dIntBase, dSlope, sIntBase, sSlope, escMercado, 
       explanationKey = 'perfectly_inelastic_quantity_fixed';
     }
   } else if (isDInelastic) {
-    Qe = Qe_orig; Pe = sInt + sSlope * Qe; Qt = Qe;
+    Qe = Qe_orig;
+    Pe = dInt - dSlope * Qe;
+    Qt = Qe;
     if (escMercado === 'impuesto') {
       Pp = sInt + sSlope * Qt;
       Pc = Pp + intervencionVal;
@@ -33,7 +35,7 @@ export const calcularMercado = (dIntBase, dSlope, sIntBase, sSlope, escMercado, 
     }
     if (inLibre && shiftD !== 0) { warningKey = 'perfectly_inelastic_with_shock'; explanationKey = 'inelastic_demand_quantity_fixed'; }
   } else if (isSInelastic) {
-    Qe = Qe_orig; Pe = dInt - dSlope * Qe; Qt = Qe;
+    Qe = Qe_orig; Pe = sInt + sSlope * Qe; Qt = Qe;
     if (escMercado === 'impuesto') {
       Pc = dInt - dSlope * Qt;
       Pp = Pc - intervencionVal;

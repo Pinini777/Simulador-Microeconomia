@@ -16,10 +16,18 @@ describe('calcularMercado', () => {
     expect(result.explanationKey).toBe('inelastic_demand_quantity_fixed')
   })
 
-  it('keeps quantity fixed under perfectly inelastic demand', () => {
+  it('lets price absorb a perfectly inelastic demand shock while quantity stays fixed', () => {
     const result = calcularMercado(100, 1, 20, 1, 'libre', 0, 5, 0, true, false)
     expect(result.Qe).toBe(result.Qe_orig)
-    expect(result.Pe).toBeCloseTo(60, 2)
+    expect(result.Pe).toBeCloseTo(65, 2)
+  })
+
+  it('lets price absorb a perfectly inelastic supply shock while quantity stays fixed', () => {
+    const result = calcularMercado(100, 1, 20, 1, 'libre', 0, 0, 5, false, true)
+    expect(result.Qe).toBe(result.Qe_orig)
+    expect(result.Pe).toBeCloseTo(55, 2)
+    expect(result.warningKey).toBe('perfectly_inelastic_with_shock')
+    expect(result.explanationKey).toBe('inelastic_supply_quantity_fixed')
   })
 
   it('warns and explains a shock when both curves are perfectly inelastic', () => {

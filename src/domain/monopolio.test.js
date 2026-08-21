@@ -17,4 +17,12 @@ describe('calcularMonopolio', () => {
     expect(result.intersections).toHaveLength(0)
     expect(result.selected).toBeNull()
   })
+
+  it('safely propagates a no-solution regulation through calcularMonopolio', () => {
+    const result = calcularMonopolio(30, 'regulacion_cme', { cme_fixed: 300 })
+    expect(result.regulation.status).toBe('no_solution')
+    expect(result.regulation.selected).toBeNull()
+    expect(result.natural.q).toBe(0)
+    expect(result.natural.p).toBe(0)
+  })
 })

@@ -21,7 +21,11 @@ export const calcularRegulacionNatural = (dInt, dSlope, cmeBase, cmeFixed) => {
   return { status: 'dual_intersection', selected: intersections[1], alternative: intersections[0], intersections };
 };
 
-export const calcularMonopolio = (monoDemand, naturalReg) => {
+export const calcularMonopolio = (
+  monoDemand,
+  naturalReg,
+  { d_int: d_int_param = 24, d_slope: d_slope_param = 0.5, cme_base = 4, cme_fixed = 160 } = {}
+) => {
   // Tradicional
   const q_trad = Math.max(0, (monoDemand - 2) / 3);
   const p_trad = monoDemand - q_trad;
@@ -29,8 +33,8 @@ export const calcularMonopolio = (monoDemand, naturalReg) => {
   const profit_trad = (p_trad - ctm_trad) * q_trad;
 
   // Natural
-  let d_int = 24, d_slope = 0.5;
-  let q_nat, p_nat, ctm_nat, profit_nat;
+  let d_int = d_int_param, d_slope = d_slope_param;
+  let q_nat = 0, p_nat = 0, ctm_nat = 0, profit_nat = 0;
   let regulation = { status: 'single', selected: null, alternative: null, intersections: [] };
 
   if (naturalReg === 'privado') {
@@ -38,15 +42,17 @@ export const calcularMonopolio = (monoDemand, naturalReg) => {
   } else if (naturalReg === 'eficiente') {
     q_nat = 40; p_nat = 4; ctm_nat = 8; profit_nat = -160;
   } else if (naturalReg === 'regulacion_cme') {
-    regulation = calcularRegulacionNatural(24, 0.5, 4, 160);
-    ({ q: q_nat, p: p_nat, ctm: ctm_nat, profit: profit_nat } = regulation.selected);
+    regulation = calcularRegulacionNatural(d_int, d_slope, cme_base, cme_fixed);
+    if (regulation.selected) {
+      ({ q: q_nat, p: p_nat, ctm: ctm_nat, profit: profit_nat } = regulation.selected);
+    }
   } else if (naturalReg === 'libre_pierde') {
     d_int = 14;
     q_nat = 10; p_nat = 9; ctm_nat = 20; profit_nat = -110;
   }
 
   const naturalPoint = { q: q_nat, p: p_nat, ctm: ctm_nat, profit: profit_nat, d_int, d_slope };
-  if (!regulation.selected) {
+  if (!regulation.selected && regulation.status !== 'no_solution') {
     regulation.selected = naturalPoint;
     regulation.intersections = [naturalPoint];
   }

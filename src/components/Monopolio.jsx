@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Layers } from 'lucide-react';
+import { Layers, RotateCcw } from 'lucide-react';
 import { calcularMonopolio } from '../domain/monopolio';
 
 const gw = 650; const gh = 450;
@@ -13,7 +13,7 @@ const drawGrid = (id) => (
   </defs>
 );
 
-const Monopolio = () => {
+const Monopolio = ({ naturalParams }) => {
   const [monoType, setMonoType] = useState('tradicional');
   const [monoDemand, setMonoDemand] = useState(20);
   const [naturalReg, setNaturalReg] = useState('privado');
@@ -23,11 +23,21 @@ const Monopolio = () => {
   const [showCostos, setShowCostos] = useState(true);
   const [showArea, setShowArea] = useState(true);
 
-  const calc = useMemo(() => calcularMonopolio(monoDemand, naturalReg), [monoDemand, naturalReg]);
+  const calc = useMemo(() => calcularMonopolio(monoDemand, naturalReg, naturalParams), [monoDemand, naturalReg, naturalParams]);
 
-  const { tradicional, natural } = calc;
+  const handleReset = () => {
+    setMonoType('tradicional');
+    setMonoDemand(20);
+    setNaturalReg('privado');
+    setShowDemanda(true);
+    setShowCostos(true);
+    setShowArea(true);
+  };
+
+  const { tradicional, natural, regulation } = calc;
   const q_trad = tradicional.q, p_trad = tradicional.p, ctm_trad = tradicional.ctm, profit_trad = tradicional.profit;
   const { q: q_nat, p: p_nat, ctm: ctm_nat, profit: profit_nat, d_int, d_slope } = natural;
+  const { status: regStatus, selected: regSelected, alternative: regAlternative, intersections: regIntersections } = regulation;
 
   const mapX_mono = (x) => pL + (x / 24) * (gw - pL - pR);
   const mapY_mono = (y) => gh - pB - (y / 24) * (gh - pB - pT);
@@ -56,6 +66,9 @@ const Monopolio = () => {
         <div className="flex border-4 border-[#111] shadow-[6px_6px_0_0_#111] font-mono text-sm font-bold bg-white">
           <button onClick={() => setMonoType('tradicional')} className={`flex-1 p-3 uppercase ${monoType === 'tradicional' ? 'bg-[#111] text-[#FFD700]' : 'hover:bg-gray-100'}`}>Tradicional</button>
           <button onClick={() => setMonoType('natural')} className={`flex-1 p-3 uppercase border-l-4 border-[#111] ${monoType === 'natural' ? 'bg-[#0033CC] text-white' : 'hover:bg-gray-100'}`}>Natural</button>
+          <button onClick={handleReset} className="px-3 py-3 border-l-4 border-[#111] bg-[#E60039] text-white hover:bg-black transition-colors" title="Restablecer todos los valores" aria-label="Restablecer simulador de monopolio">
+            <RotateCcw className="w-4 h-4" />
+          </button>
         </div>
 
         {monoType === 'tradicional' ? (
@@ -99,9 +112,14 @@ const Monopolio = () => {
                 La demanda no alcanza a cubrir los costos medios ni siquiera maximizando beneficios.
               </div>
             )}
-            {naturalReg === 'regulacion_cme' && (
+            {naturalReg === 'regulacion_cme' && regStatus === 'dual_intersection' && regSelected && regAlternative && (
               <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#0033CC]">
-                Regulación P=CMe: no hay beneficios extra, pero la empresa no requiere subsidios para operar.
+                Se elige Q={regSelected.q.toFixed(1)} / P=${regSelected.p.toFixed(2)} porque maximiza la cantidad y minimiza el precio respecto a la alternativa (Q={regAlternative.q.toFixed(1)} / P=${regAlternative.p.toFixed(2)}).
+              </div>
+            )}
+            {naturalReg === 'regulacion_cme' && regStatus === 'no_solution' && (
+              <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#E60039]">
+                No existe intersección P=CMe con estas curvas: la regulación por costo medio no tiene solución real.
               </div>
             )}
           </div>
@@ -241,9 +259,30 @@ const Monopolio = () => {
                 </g>
               )}
 
-              <line x1={mapX_nat(q_nat)} y1={mapY_nat(0)} x2={mapX_nat(q_nat)} y2={mapY_nat(Math.max(p_nat, ctm_nat))} stroke="#111" strokeDasharray="4,4" />
-              <line x1={mapX_nat(0)} y1={mapY_nat(p_nat)} x2={mapX_nat(q_nat)} y2={mapY_nat(p_nat)} stroke="#111" strokeDasharray="4,4" />
-              <circle cx={mapX_nat(q_nat)} cy={mapY_nat(p_nat)} r="7" fill={naturalReg==='privado' ? "#111" : "#E60039"} />
+              {regStatus !== 'no_solution' && regSelected && (
+                <g>
+                  <line x1={mapX_nat(regSelected.q)} y1={mapY_nat(0)} x2={mapX_nat(regSelected.q)} y2={mapY_nat(Math.max(regSelected.p, regSelected.ctm))} stroke="#111" strokeDasharray="4,4" />
+                  <line x1={mapX_nat(0)} y1={mapY_nat(regSelected.p)} x2={mapX_nat(regSelected.q)} y2={mapY_nat(regSelected.p)} stroke="#111" strokeDasharray="4,4" />
+                  <circle cx={mapX_nat(regSelected.q)} cy={mapY_nat(regSelected.p)} r="8" fill={naturalReg==='privado' ? "#111" : "#E60039"} stroke="#fff" strokeWidth="2" />
+                  <text x={mapX_nat(regSelected.q) + 10} y={mapY_nat(regSelected.p) - 10} className="font-bold font-mono text-[10px] fill-[#111]">Q*={regSelected.q.toFixed(1)}</text>
+                </g>
+              )}
+
+              {regStatus === 'dual_intersection' && regAlternative && (
+                <g opacity="0.45" aria-label="Alternativa no seleccionada">
+                  <line x1={mapX_nat(regAlternative.q)} y1={mapY_nat(0)} x2={mapX_nat(regAlternative.q)} y2={mapY_nat(Math.max(regAlternative.p, regAlternative.ctm))} stroke="#666" strokeDasharray="2,2" />
+                  <line x1={mapX_nat(0)} y1={mapY_nat(regAlternative.p)} x2={mapX_nat(regAlternative.q)} y2={mapY_nat(regAlternative.p)} stroke="#666" strokeDasharray="2,2" />
+                  <circle cx={mapX_nat(regAlternative.q)} cy={mapY_nat(regAlternative.p)} r="5" fill="#999" stroke="#fff" strokeWidth="2" />
+                  <text x={mapX_nat(regAlternative.q) + 8} y={mapY_nat(regAlternative.p) + 14} className="font-bold font-mono text-[9px] fill-[#666]">Alt. Q={regAlternative.q.toFixed(1)}</text>
+                </g>
+              )}
+
+              {regStatus === 'no_solution' && (
+                <g>
+                  <rect x={mapX_nat(5)} y={mapY_nat(20)} width={mapX_nat(40) - mapX_nat(5)} height={mapY_nat(12) - mapY_nat(20)} fill="#FFD700" opacity="0.3" stroke="#111" strokeWidth="2" />
+                  <text x={(mapX_nat(5) + mapX_nat(40)) / 2} y={(mapY_nat(20) + mapY_nat(12)) / 2 + 4} textAnchor="middle" className="font-bold font-mono text-xs fill-[#111]">Sin solución P=CMe</text>
+                </g>
+              )}
             </svg>
           )}
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Layers } from 'lucide-react';
+import { Layers, RotateCcw } from 'lucide-react';
 import { calcularFPP } from '../domain/fpp';
 
 const gw = 650; const gh = 450;
@@ -23,7 +23,16 @@ const FPP = () => {
   const [showFrontera, setShowFrontera] = useState(true);
   const [showGuias, setShowGuias] = useState(true);
 
-  const { status } = useMemo(() => calcularFPP(techX, techY, pointX, pointY), [techX, techY, pointX, pointY]);
+  const { status, nearFrontier } = useMemo(() => calcularFPP(techX, techY, pointX, pointY), [techX, techY, pointX, pointY]);
+
+  const handleReset = () => {
+    setTechX(100);
+    setTechY(100);
+    setPointX(50);
+    setPointY(50);
+    setShowFrontera(true);
+    setShowGuias(true);
+  };
 
   const fppColor = status === 'inalcanzable' ? '#E60039' : status === 'ineficiente' ? '#0033CC' : '#00A854';
 
@@ -44,7 +53,12 @@ const FPP = () => {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
       <div className="lg:col-span-4 space-y-6">
         <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Capacidad Tecnológica</h2>
+          <div className="flex justify-between items-center border-b-4 border-[#111] pb-2">
+            <h2 className="font-serif font-black text-xl">Capacidad Tecnológica</h2>
+            <button onClick={handleReset} className="font-mono text-[9px] uppercase font-bold bg-[#E60039] text-white px-2 py-1 border-2 border-[#111] hover:bg-black transition-colors flex items-center gap-1" title="Restablecer todos los valores" aria-label="Restablecer simulador de FPP">
+              <RotateCcw className="w-3 h-3" /> Restablecer
+            </button>
+          </div>
           <p className="font-sans text-xs">Mueve estos valores para simular <strong>Crecimiento Económico</strong>.</p>
           <div>
             <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Tech Y (Autos)</span><span className="bg-[#111] text-white px-1">{techY}</span></div>
@@ -138,6 +152,11 @@ const FPP = () => {
             )}
             
             <circle cx={mapX(pointX)} cy={mapY(pointY)} r="8" fill={fppColor} stroke="#fff" strokeWidth="2" />
+            {nearFrontier && (
+              <g aria-label="Punto cercano a la frontera" role="img">
+                <circle cx={mapX(pointX)} cy={mapY(pointY)} r="14" fill="none" stroke={fppColor} strokeWidth="2" strokeDasharray="4,4" opacity="0.7" />
+              </g>
+            )}
           </svg>
         </div>
       </div>

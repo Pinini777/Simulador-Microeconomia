@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Layers } from 'lucide-react';
-import { calcularCostos } from '../domain/costos';
+import { Layers, RotateCcw } from 'lucide-react';
+import { calcularCostos, cvm, ctm, cmg } from '../domain/costos';
 
 const gw = 650; const gh = 450;
 const pL = 60; const pB = 50; const pT = 30; const pR = 30;
@@ -9,6 +9,15 @@ const drawGrid = (id) => (
   <defs>
     <pattern id={id} width="40" height="40" patternUnits="userSpaceOnUse">
       <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E5E5" strokeWidth="1" />
+    </pattern>
+  </defs>
+);
+
+const hatchPattern = (id) => (
+  <defs>
+    <pattern id={id} width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#E60039" fillOpacity="0.15" />
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#E60039" strokeWidth="2" />
     </pattern>
   </defs>
 );
@@ -22,23 +31,31 @@ const Costos = () => {
   const [showZonasCriticas, setShowZonasCriticas] = useState(true);
   const [showArea, setShowArea] = useState(true);
 
-  const { firmQ, currentCTM, currentProfit, status, minCVM_Q, minCVM_P, minCTM_Q, minCTM_P } = useMemo(() => calcularCostos(firmPrice), [firmPrice]);
+  const { firmQ, currentCTM, currentProfit, status, fixedCost, minCVM_Q, minCVM_P, minCTM_Q, minCTM_P } = useMemo(() => calcularCostos(firmPrice), [firmPrice]);
 
   const firmStatusColor = status === 'cierre' ? '#E60039' : status === 'extraordinario' ? '#00A854' : status === 'nivelacion' ? '#0033CC' : '#FFD700';
   const firmStatusText = status === 'cierre' ? 'CIERRE DE EMPRESA' : status === 'extraordinario' ? 'BENEFICIOS EXTRAORDINARIOS' : status === 'nivelacion' ? 'PUNTO DE NIVELACIÓN' : 'PRODUCCIÓN CON PÉRDIDAS';
+
+  const handleReset = () => {
+    setFirmPrice(8);
+    setShowCMg(true);
+    setShowCostosMedios(true);
+    setShowZonasCriticas(true);
+    setShowArea(true);
+  };
 
   const mapX_cost = (x) => pL + (x / 16) * (gw - pL - pR);
   const mapY_cost = (y) => gh - pB - (y / 18) * (gh - pB - pT);
 
   const { pathCMg, pathCTM, pathCVM } = useMemo(() => {
-    let pCMg = `M ${mapX_cost(0.1)} ${mapY_cost(0.3*(0.1**2) - 3.2*0.1 + 10.4)} `;
-    let pCTM = `M ${mapX_cost(2)} ${mapY_cost(0.1*(4) - 1.6*2 + 10.4 + 30/2)} `;
-    let pCVM = `M ${mapX_cost(0.1)} ${mapY_cost(0.1*(0.1**2) - 1.6*0.1 + 10.4)} `;
+    let pCMg = `M ${mapX_cost(0.1)} ${mapY_cost(cmg(0.1))} `;
+    let pCTM = `M ${mapX_cost(2)} ${mapY_cost(ctm(2))} `;
+    let pCVM = `M ${mapX_cost(0.1)} ${mapY_cost(cvm(0.1))} `;
 
-    for (let q = 0.5; q <= 16; q += 0.5) { 
-      pCMg += `L ${mapX_cost(q)} ${mapY_cost(0.3*q*q - 3.2*q + 10.4)} `; 
-      if (q >= 1.5) pCTM += `L ${mapX_cost(q)} ${mapY_cost(0.1*q*q - 1.6*q + 10.4 + 30/q)} `;
-      pCVM += `L ${mapX_cost(q)} ${mapY_cost(0.1*q*q - 1.6*q + 10.4)} `;
+    for (let q = 0.5; q <= 16; q += 0.5) {
+      pCMg += `L ${mapX_cost(q)} ${mapY_cost(cmg(q))} `;
+      if (q >= 1.5) pCTM += `L ${mapX_cost(q)} ${mapY_cost(ctm(q))} `;
+      pCVM += `L ${mapX_cost(q)} ${mapY_cost(cvm(q))} `;
     }
     return { pathCMg: pCMg, pathCTM: pCTM, pathCVM: pCVM };
   }, []);
@@ -54,7 +71,12 @@ const Costos = () => {
         </div>
 
         <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5">
-          <h2 className="font-serif font-black text-xl mb-4">Simulador de Crisis</h2>
+          <div className="flex justify-between items-center border-b-4 border-[#111] pb-2 mb-4">
+            <h2 className="font-serif font-black text-xl">Simulador de Crisis</h2>
+            <button onClick={handleReset} className="font-mono text-[9px] uppercase font-bold bg-[#E60039] text-white px-2 py-1 border-2 border-[#111] hover:bg-black transition-colors flex items-center gap-1" title="Restablecer todos los valores" aria-label="Restablecer simulador de costos">
+              <RotateCcw className="w-3 h-3" /> Restablecer
+            </button>
+          </div>
           <div className="mb-6">
             <div className="flex justify-between font-mono text-sm font-bold mb-2"><span>Precio Dictado ($)</span><span className="bg-[#111] text-[#FFD700] px-2">{firmPrice.toFixed(1)}</span></div>
             <input type="range" min="2" max="16" step="0.5" value={firmPrice} onChange={(e) => setFirmPrice(Number(e.target.value))} className="w-full h-3 accent-[#E60039] bg-gray-200" />
@@ -72,7 +94,7 @@ const Costos = () => {
             </div>
             <div className="border-2 border-[#111] bg-[#F4F1EA] p-2">
               <div className="font-mono text-[10px] font-bold uppercase">Beneficio</div>
-              <div className="font-serif font-black text-2xl" style={{color: firmStatusColor}}>{firmQ > 0 ? currentProfit.toFixed(1) : '-30'}</div>
+              <div className="font-serif font-black text-2xl" style={{color: firmStatusColor}}>{firmQ > 0 ? currentProfit.toFixed(1) : `-${fixedCost}`}</div>
             </div>
           </div>
         </div>
@@ -136,6 +158,14 @@ const Costos = () => {
 
             {firmQ > 0 && showArea && (
               <polygon points={`${mapX_cost(0)},${mapY_cost(firmPrice)} ${mapX_cost(firmQ)},${mapY_cost(firmPrice)} ${mapX_cost(firmQ)},${mapY_cost(currentCTM)} ${mapX_cost(0)},${mapY_cost(currentCTM)}`} fill={firmPrice >= currentCTM ? "#00A854" : "#FFD700"} opacity="0.3" />
+            )}
+
+            {firmQ === 0 && showArea && (
+              <g aria-label="Pérdida fija de costos fijos" role="img">
+                {hatchPattern('hatchCierre')}
+                <rect x={mapX_cost(0)} y={mapY_cost(10)} width={mapX_cost(12) - mapX_cost(0)} height={mapY_cost(0) - mapY_cost(10)} fill="url(#hatchCierre)" stroke="#E60039" strokeWidth="2" />
+                <text x={(mapX_cost(0) + mapX_cost(12)) / 2} y={(mapY_cost(0) + mapY_cost(10)) / 2 + 5} textAnchor="middle" className="font-bold font-mono text-xs fill-[#E60039]">−CF (${fixedCost})</text>
+              </g>
             )}
 
             {showCostosMedios && (

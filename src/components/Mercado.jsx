@@ -1,6 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { Scale, BookOpen, Layers } from 'lucide-react';
+import { Scale, BookOpen, Layers, AlertTriangle } from 'lucide-react';
 import { calcularMercado } from '../domain/mercado';
+
+const WARNING_TEXT = 'Combinación inelástica con shock: resultado simplificado; la cantidad permanece fija.';
+
+const EXPLANATION_TEXT = {
+  perfectly_inelastic_quantity_fixed: 'Ambas curvas son perfectamente inelásticas: la cantidad permanece fija y el precio absorbe el shock bajo la interpretación simplificada.',
+  inelastic_demand_quantity_fixed: 'Demanda perfectamente inelástica: la cantidad no cambia y el precio absorbe el shock.',
+  inelastic_supply_quantity_fixed: 'Oferta perfectamente inelástica: la cantidad no cambia y el precio absorbe el shock.'
+};
 
 const gw = 650; const gh = 450;
 const pL = 60; const pB = 50; const pT = 30; const pR = 30;
@@ -44,13 +52,24 @@ const Mercado = () => {
     setIsDInelastic(false);
     setIsSInelastic(false);
     setEscMercado('libre');
+    setShowCurves(true);
+    setShowEquilibrium(true);
+    setShowAreas(true);
   };
 
   const calc = useMemo(() => {
     return calcularMercado(dInt, dSlope, sInt, sSlope, escMercado, intervencionVal, shiftD, shiftS, isDInelastic, isSInelastic);
   }, [dInt, dSlope, sInt, sSlope, escMercado, intervencionVal, shiftD, shiftS, isDInelastic, isSInelastic]);
 
-  const { Qe_orig, Pe_orig, Qe, Pe, Qt, Pc, Pp, taxRevenue, subsidyCost, dInt: newDInt, sInt: newSInt } = calc;
+  const { Qe_orig, Pe_orig, Qe, Pe, Qt, Pc, Pp, taxRevenue, subsidyCost, dInt: newDInt, sInt: newSInt, warningKey, explanationKey } = calc;
+
+  const handleScenarioChange = (next) => {
+    if (escMercado === 'libre' && next !== 'libre') {
+      setShiftD(0);
+      setShiftS(0);
+    }
+    setEscMercado(next);
+  };
 
   const maxX = 20, maxY = 20;
   const mapX = (x) => pL + (x / maxX) * (gw - pL - pR);
@@ -74,7 +93,7 @@ const Mercado = () => {
           </div>
           <div className="flex gap-2 font-mono text-xs uppercase font-bold">
             {['libre', 'impuesto', 'subsidio'].map(t => (
-              <button key={t} onClick={() => setEscMercado(t)} className={`flex-1 p-2 border-2 border-[#111] ${escMercado === t ? 'bg-[#111] text-[#FFD700]' : 'hover:bg-gray-100'}`}>
+              <button key={t} onClick={() => handleScenarioChange(t)} className={`flex-1 p-2 border-2 border-[#111] ${escMercado === t ? 'bg-[#111] text-[#FFD700]' : 'hover:bg-gray-100'}`}>
                 {t}
               </button>
             ))}
@@ -285,17 +304,24 @@ const Mercado = () => {
           </svg>
         </div>
 
+        {warningKey && (
+          <div className="bg-[#FFD700] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-4 flex items-start gap-3" role="alert" aria-live="polite">
+            <AlertTriangle className="w-5 h-5 text-[#111] flex-shrink-0 mt-0.5" />
+            <p className="font-sans text-xs font-bold text-[#111]">{WARNING_TEXT}</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-3 gap-0 border-4 border-[#111] shadow-[6px_6px_0_0_#111] bg-white">
           <div className="col-span-2 p-4 border-r-4 border-[#111] bg-[#F4F1EA]">
             <h3 className="font-serif font-black text-lg mb-2 flex items-center gap-2">
                 <BookOpen className="w-5 h-5" /> Estática Comparativa e Incidencia
             </h3>
             <p className="font-sans text-xs leading-relaxed text-[#111]">
-                {escMercado === 'impuesto' ? (
+                {explanationKey ? EXPLANATION_TEXT[explanationKey] : escMercado === 'impuesto' ? (
                   isDInelastic ? "Demanda Vertical: El consumidor no tiene escapatoria y absorbe el 100% del impuesto." :
                   isSInelastic ? "Oferta Vertical: Las fábricas asumen todo el costo del impuesto al no poder reducir su producción." :
                   dSlope > sSlope ? "La Demanda es más inelástica que la Oferta. Los consumidores absorben la MAYOR PARTE del impuesto." :
-                  sSlope > dSlope ? "La Oferta es más inelástica que la Demanda. Los productores absorben la MAYOR PARTE del impuesto." : 
+                  sSlope > dSlope ? "La Oferta es más inelástica que la Demanda. Los productores absorben la MAYOR PARTE del impuesto." :
                   "La carga del impuesto se reparte equitativamente al tener la misma elasticidad."
                 ) : escMercado === 'subsidio' ? (
                   "El subsidio reduce el precio para compradores y lo sube para vendedores. Sin embargo, el Gasto Estatal es mayor que el beneficio creado, generando Ineficiencia (PIE)."
