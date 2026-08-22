@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Mercado from './components/Mercado';
 import FPP from './components/FPP';
 import Costos from './components/Costos';
@@ -9,7 +9,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#E5E0D8] p-4 md:p-8 font-sans text-[#111] selection:bg-[#FF3366] selection:text-white pb-20">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-[90rem] mx-auto space-y-8">
         
         {/* HEADER NEO-BRUTALISTA */}
         <header className="bg-[#F4F1EA] border-4 border-[#111] shadow-[8px_8px_0_0_#111] p-6 relative overflow-hidden">

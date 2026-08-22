@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { Layers, RotateCcw } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Layers } from 'lucide-react';
+import SimulatorLayout from './SimulatorLayout';
 import { calcularMonopolio } from '../domain/monopolio';
 
 const gw = 650; const gh = 450;
@@ -23,7 +24,13 @@ const Monopolio = ({ naturalParams }) => {
   const [showCostos, setShowCostos] = useState(true);
   const [showArea, setShowArea] = useState(true);
 
-  const calc = useMemo(() => calcularMonopolio(monoDemand, naturalReg, naturalParams), [monoDemand, naturalReg, naturalParams]);
+  const cmeBase = naturalParams?.cme_base ?? 4;
+  const cmeFixed = naturalParams?.cme_fixed ?? 160;
+
+  const calc = useMemo(() => {
+    const resolvedNaturalParams = { ...naturalParams, cme_base: cmeBase, cme_fixed: cmeFixed };
+    return calcularMonopolio(monoDemand, naturalReg, resolvedNaturalParams);
+  }, [monoDemand, naturalReg, naturalParams, cmeBase, cmeFixed]);
 
   const handleReset = () => {
     setMonoType('tradicional');
@@ -37,7 +44,7 @@ const Monopolio = ({ naturalParams }) => {
   const { tradicional, natural, regulation } = calc;
   const q_trad = tradicional.q, p_trad = tradicional.p, ctm_trad = tradicional.ctm, profit_trad = tradicional.profit;
   const { q: q_nat, p: p_nat, ctm: ctm_nat, profit: profit_nat, d_int, d_slope } = natural;
-  const { status: regStatus, selected: regSelected, alternative: regAlternative, intersections: regIntersections } = regulation;
+  const { status: regStatus, selected: regSelected, alternative: regAlternative } = regulation;
 
   const mapX_mono = (x) => pL + (x / 24) * (gw - pL - pR);
   const mapY_mono = (y) => gh - pB - (y / 24) * (gh - pB - pT);
@@ -53,111 +60,112 @@ const Monopolio = ({ naturalParams }) => {
   }, []);
 
   const pathCTMeNat = useMemo(() => {
-    let p = `M ${mapX_nat(2)} ${mapY_nat(4 + 160/2)} `;
+    let p = `M ${mapX_nat(2)} ${mapY_nat(cmeBase + cmeFixed / 2)} `;
     for (let i = 3; i <= 50; i++) {
-      p += `L ${mapX_nat(i)} ${mapY_nat(4 + 160/i)} `;
+      p += `L ${mapX_nat(i)} ${mapY_nat(cmeBase + cmeFixed / i)} `;
     }
     return p;
-  }, []);
+  }, [cmeBase, cmeFixed]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
-      <div className="lg:col-span-4 space-y-6">
-        <div className="flex border-4 border-[#111] shadow-[6px_6px_0_0_#111] font-mono text-sm font-bold bg-white">
-          <button onClick={() => setMonoType('tradicional')} className={`flex-1 p-3 uppercase ${monoType === 'tradicional' ? 'bg-[#111] text-[#FFD700]' : 'hover:bg-gray-100'}`}>Tradicional</button>
-          <button onClick={() => setMonoType('natural')} className={`flex-1 p-3 uppercase border-l-4 border-[#111] ${monoType === 'natural' ? 'bg-[#0033CC] text-white' : 'hover:bg-gray-100'}`}>Natural</button>
-          <button onClick={handleReset} className="px-3 py-3 border-l-4 border-[#111] bg-[#E60039] text-white hover:bg-black transition-colors" title="Restablecer todos los valores" aria-label="Restablecer simulador de monopolio">
-            <RotateCcw className="w-4 h-4" />
-          </button>
-        </div>
+    <SimulatorLayout
+      title="Monopolios"
+      onReset={handleReset}
+      resetLabel="Restablecer simulador de monopolio"
+      controls={
+        <>
+          <div className="flex border-4 border-[#111] shadow-[6px_6px_0_0_#111] font-mono text-sm font-bold bg-white">
+            <button onClick={() => setMonoType('tradicional')} className={`flex-1 p-3 uppercase ${monoType === 'tradicional' ? 'bg-[#111] text-[#FFD700]' : 'hover:bg-gray-100'}`}>Tradicional</button>
+            <button onClick={() => setMonoType('natural')} className={`flex-1 p-3 uppercase border-l-4 border-[#111] ${monoType === 'natural' ? 'bg-[#0033CC] text-white' : 'hover:bg-gray-100'}`}>Natural</button>
+          </div>
 
-        {monoType === 'tradicional' ? (
-          <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-            <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Maximización M. Tradicional</h2>
-            <p className="font-sans text-xs">El monopolista restringe la producción donde <strong className="bg-[#111] text-white px-1">IMg = CMg</strong>. ¡Pero cuidado! Si la demanda es débil, puede tener pérdidas.</p>
-            <div className="pt-4">
-              <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Demanda Máx</span><span className="bg-[#111] text-white px-1">{monoDemand}</span></div>
-              <input type="range" min="10" max="24" step="1" value={monoDemand} onChange={(e) => setMonoDemand(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+          {monoType === 'tradicional' ? (
+            <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+              <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Maximización M. Tradicional</h2>
+              <p className="font-sans text-xs">El monopolista restringe la producción donde <strong className="bg-[#111] text-white px-1">IMg = CMg</strong>. ¡Pero cuidado! Si la demanda es débil, puede tener pérdidas.</p>
+              <div className="pt-4">
+                <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Demanda Máx</span><span className="bg-[#111] text-white px-1">{monoDemand}</span></div>
+                <input type="range" min="10" max="24" step="1" value={monoDemand} onChange={(e) => setMonoDemand(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+              </div>
+              <div className="p-4 border-4 border-[#111] bg-white text-center mt-4">
+                <div className="font-mono text-xs font-bold uppercase mb-1">Resultado</div>
+                <div className={`font-serif text-2xl font-black ${profit_trad < 0 ? 'text-[#E60039]' : 'text-[#00A854]'}`}>${profit_trad.toFixed(1)}</div>
+              </div>
             </div>
-            <div className="p-4 border-4 border-[#111] bg-white text-center mt-4">
-              <div className="font-mono text-xs font-bold uppercase mb-1">Resultado</div>
-              <div className={`font-serif text-2xl font-black ${profit_trad < 0 ? 'text-[#E60039]' : 'text-[#00A854]'}`}>${profit_trad.toFixed(1)}</div>
+          ) : (
+            <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#0033CC] p-5 space-y-4">
+              <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Monopolio Natural</h2>
+              <p className="font-sans text-xs">Costos Fijos inmensos → CTM siempre cae. ¿Cómo lo regula el Estado?</p>
+              <div className="space-y-2 mt-4">
+                <button onClick={() => setNaturalReg('privado')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'privado' ? 'bg-[#00A854] text-[#111]' : 'bg-white hover:bg-gray-100'}`}>
+                  <span>1. Monopolista Libre</span><span>(Gana)</span>
+                </button>
+                <button onClick={() => setNaturalReg('libre_pierde')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'libre_pierde' ? 'bg-[#FFD700] text-[#111]' : 'bg-white hover:bg-gray-100'}`}>
+                  <span>2. Monopolista Libre</span><span>(Pierde)</span>
+                </button>
+                <button onClick={() => setNaturalReg('regulacion_cme')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'regulacion_cme' ? 'bg-[#0033CC] text-white' : 'bg-white hover:bg-gray-100'}`}>
+                  <span>3. Regulación P=CMe</span><span>(Neutro)</span>
+                </button>
+                <button onClick={() => setNaturalReg('eficiente')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'eficiente' ? 'bg-[#E60039] text-white' : 'bg-white hover:bg-gray-100'}`}>
+                  <span>4. Regulación P=CMg</span><span>(Pierde)</span>
+                </button>
+              </div>
+              {naturalReg === 'eficiente' && (
+                <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#E60039]">
+                  ¡P=CMg fuerza al precio por debajo del CTM! Requiere subsidios estatales para no quebrar.
+                </div>
+              )}
+              {naturalReg === 'libre_pierde' && (
+                <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#FFD700]">
+                  La demanda no alcanza a cubrir los costos medios ni siquiera maximizando beneficios.
+                </div>
+              )}
+              {naturalReg === 'regulacion_cme' && regStatus === 'dual_intersection' && regSelected && regAlternative && (
+                <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#0033CC]">
+                  Se elige Q={regSelected.q.toFixed(1)} / P=${regSelected.p.toFixed(2)} porque maximiza la cantidad y minimiza el precio respecto a la alternativa (Q={regAlternative.q.toFixed(1)} / P=${regAlternative.p.toFixed(2)}).
+                </div>
+              )}
+              {naturalReg === 'regulacion_cme' && regStatus === 'no_solution' && (
+                <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#E60039]">
+                  No existe intersección P=CMe con estas curvas: la regulación por costo medio no tiene solución real.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Panel 3: Leyenda Visual (Toggles) */}
+          <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+            <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
+              <Layers className="w-5 h-5" /> Leyenda Visual
+            </h2>
+            <div className="space-y-3 font-mono text-xs">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showDemanda} onChange={() => setShowDemanda(!showDemanda)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Demanda (D) e IMg</strong>
+                  <span className="text-[10px] text-gray-600">Demanda del mercado (azul) y el Ingreso Marginal (punteada) que cae más rápido.</span>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showCostos} onChange={() => setShowCostos(!showCostos)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Estructura de Costos</strong>
+                  <span className="text-[10px] text-gray-600">Costo Marginal (negro) y Costo Total Medio (violeta).</span>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showArea} onChange={() => setShowArea(!showArea)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Área de Resultados</strong>
+                  <span className="text-[10px] text-gray-600">Beneficios extraordinarios (verde) o Pérdidas (rojo) del monopolio.</span>
+                </div>
+              </label>
             </div>
           </div>
-        ) : (
-          <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#0033CC] p-5 space-y-4">
-            <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Monopolio Natural</h2>
-            <p className="font-sans text-xs">Costos Fijos inmensos → CTM siempre cae. ¿Cómo lo regula el Estado?</p>
-            <div className="space-y-2 mt-4">
-              <button onClick={() => setNaturalReg('privado')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'privado' ? 'bg-[#00A854] text-[#111]' : 'bg-white hover:bg-gray-100'}`}>
-                <span>1. Monopolista Libre</span><span>(Gana)</span>
-              </button>
-              <button onClick={() => setNaturalReg('libre_pierde')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'libre_pierde' ? 'bg-[#FFD700] text-[#111]' : 'bg-white hover:bg-gray-100'}`}>
-                <span>2. Monopolista Libre</span><span>(Pierde)</span>
-              </button>
-              <button onClick={() => setNaturalReg('regulacion_cme')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'regulacion_cme' ? 'bg-[#0033CC] text-white' : 'bg-white hover:bg-gray-100'}`}>
-                <span>3. Regulación P=CMe</span><span>(Neutro)</span>
-              </button>
-              <button onClick={() => setNaturalReg('eficiente')} className={`w-full p-3 border-4 border-[#111] font-bold font-mono text-[10px] uppercase flex justify-between ${naturalReg === 'eficiente' ? 'bg-[#E60039] text-white' : 'bg-white hover:bg-gray-100'}`}>
-                <span>4. Regulación P=CMg</span><span>(Pierde)</span>
-              </button>
-            </div>
-            {naturalReg === 'eficiente' && (
-              <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#E60039]">
-                ¡P=CMg fuerza al precio por debajo del CTM! Requiere subsidios estatales para no quebrar.
-              </div>
-            )}
-            {naturalReg === 'libre_pierde' && (
-              <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#FFD700]">
-                La demanda no alcanza a cubrir los costos medios ni siquiera maximizando beneficios.
-              </div>
-            )}
-            {naturalReg === 'regulacion_cme' && regStatus === 'dual_intersection' && regSelected && regAlternative && (
-              <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#0033CC]">
-                Se elige Q={regSelected.q.toFixed(1)} / P=${regSelected.p.toFixed(2)} porque maximiza la cantidad y minimiza el precio respecto a la alternativa (Q={regAlternative.q.toFixed(1)} / P=${regAlternative.p.toFixed(2)}).
-              </div>
-            )}
-            {naturalReg === 'regulacion_cme' && regStatus === 'no_solution' && (
-              <div className="p-2 bg-black text-white font-mono text-[10px] font-bold border-l-4 border-[#E60039]">
-                No existe intersección P=CMe con estas curvas: la regulación por costo medio no tiene solución real.
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Panel 3: Leyenda Visual (Toggles) */}
-        <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
-            <Layers className="w-5 h-5" /> Leyenda Visual
-          </h2>
-          <div className="space-y-3 font-mono text-xs">
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showDemanda} onChange={() => setShowDemanda(!showDemanda)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-              <div>
-                <strong className="uppercase block">Demanda (D) e IMg</strong>
-                <span className="text-[10px] text-gray-600">Demanda del mercado (azul) y el Ingreso Marginal (punteada) que cae más rápido.</span>
-              </div>
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showCostos} onChange={() => setShowCostos(!showCostos)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-              <div>
-                <strong className="uppercase block">Estructura de Costos</strong>
-                <span className="text-[10px] text-gray-600">Costo Marginal (negro) y Costo Total Medio (violeta).</span>
-              </div>
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showArea} onChange={() => setShowArea(!showArea)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-              <div>
-                <strong className="uppercase block">Área de Resultados</strong>
-                <span className="text-[10px] text-gray-600">Beneficios extraordinarios (verde) o Pérdidas (rojo) del monopolio.</span>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div className="lg:col-span-8">
-        <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative">
+        </>
+      }
+      chart={
+        <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative h-full">
           <div className="absolute top-4 left-4 bg-[#111] text-[#F4F1EA] px-3 py-1 font-mono text-xs font-bold border-2 border-white z-10">
             {monoType === 'tradicional' ? 'EQUILIBRIO, GANANCIAS Y PÉRDIDAS' : 'EL DILEMA DE LA REGULACIÓN'}
           </div>
@@ -252,9 +260,9 @@ const Monopolio = ({ naturalParams }) => {
 
               {showCostos && (
                 <g>
-                  <line x1={mapX_nat(0)} y1={mapY_nat(4)} x2={mapX_nat(50)} y2={mapY_nat(4)} stroke="#111" strokeWidth="4" />
-                  <path d={pathCTMeNat} fill="none" stroke="#9333EA" strokeWidth="3" />
-                  <text x={mapX_nat(42)} y={mapY_nat(3.5)} className="fill-black font-bold font-serif text-lg">CMg</text>
+                  <line x1={mapX_nat(0)} y1={mapY_nat(cmeBase)} x2={mapX_nat(50)} y2={mapY_nat(cmeBase)} stroke="#111" strokeWidth="4" />
+                  <path d={pathCTMeNat} fill="none" stroke="#9333EA" strokeWidth="3" aria-label="Curva CTMe natural" />
+                  <text x={mapX_nat(42)} y={mapY_nat(cmeBase - 0.5)} className="fill-black font-bold font-serif text-lg">CMg</text>
                   <text x={mapX_nat(38)} y={mapY_nat(9)} className="fill-purple-800 font-bold font-serif text-lg">CTMe</text>
                 </g>
               )}
@@ -286,8 +294,9 @@ const Monopolio = ({ naturalParams }) => {
             </svg>
           )}
         </div>
-      </div>
-    </div>
+      }
+      results={null}
+    />
   );
 };
 

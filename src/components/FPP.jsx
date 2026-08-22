@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { Layers, RotateCcw } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Layers } from 'lucide-react';
+import SimulatorLayout from './SimulatorLayout';
 import { calcularFPP } from '../domain/fpp';
 
 const gw = 650; const gh = 450;
@@ -14,8 +15,8 @@ const drawGrid = (id) => (
 );
 
 const FPP = () => {
-  const [techX, setTechX] = useState(100); 
-  const [techY, setTechY] = useState(100); 
+  const [techX, setTechX] = useState(100);
+  const [techY, setTechY] = useState(100);
   const [pointX, setPointX] = useState(50);
   const [pointY, setPointY] = useState(50);
 
@@ -50,74 +51,62 @@ const FPP = () => {
   }, [techX, techY]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
-      <div className="lg:col-span-4 space-y-6">
-        <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-          <div className="flex justify-between items-center border-b-4 border-[#111] pb-2">
-            <h2 className="font-serif font-black text-xl">Capacidad Tecnológica</h2>
-            <button onClick={handleReset} className="font-mono text-[9px] uppercase font-bold bg-[#E60039] text-white px-2 py-1 border-2 border-[#111] hover:bg-black transition-colors flex items-center gap-1" title="Restablecer todos los valores" aria-label="Restablecer simulador de FPP">
-              <RotateCcw className="w-3 h-3" /> Restablecer
-            </button>
+    <SimulatorLayout
+      title="Capacidad Tecnológica"
+      onReset={handleReset}
+      resetLabel="Restablecer simulador de FPP"
+      controls={
+        <>
+          <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+            <p className="font-sans text-xs">Mueve estos valores para simular <strong>Crecimiento Económico</strong>.</p>
+            <div>
+              <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Tech Y (Autos)</span><span className="bg-[#111] text-white px-1">{techY}</span></div>
+              <input type="range" min="50" max="150" value={techY} onChange={(e) => setTechY(Number(e.target.value))} className="w-full accent-[#111]" />
+            </div>
+            <div>
+              <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Tech X (PCs)</span><span className="bg-[#111] text-white px-1">{techX}</span></div>
+              <input type="range" min="50" max="150" value={techX} onChange={(e) => setTechX(Number(e.target.value))} className="w-full accent-[#111]" />
+            </div>
           </div>
-          <p className="font-sans text-xs">Mueve estos valores para simular <strong>Crecimiento Económico</strong>.</p>
-          <div>
-            <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Tech Y (Autos)</span><span className="bg-[#111] text-white px-1">{techY}</span></div>
-            <input type="range" min="50" max="150" value={techY} onChange={(e) => setTechY(Number(e.target.value))} className="w-full accent-[#111]" />
-          </div>
-          <div>
-            <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Tech X (PCs)</span><span className="bg-[#111] text-white px-1">{techX}</span></div>
-            <input type="range" min="50" max="150" value={techX} onChange={(e) => setTechX(Number(e.target.value))} className="w-full accent-[#111]" />
-          </div>
-        </div>
 
-        <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Punto de Producción</h2>
-          <div>
-            <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Producir Autos</span><span>{pointY}</span></div>
-            <input type="range" min="0" max="150" value={pointY} onChange={(e) => setPointY(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+          <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+            <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2">Punto de Producción</h2>
+            <div>
+              <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Producir Autos</span><span>{pointY}</span></div>
+              <input type="range" min="0" max="150" value={pointY} onChange={(e) => setPointY(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+            </div>
+            <div>
+              <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Producir PCs</span><span>{pointX}</span></div>
+              <input type="range" min="0" max="150" value={pointX} onChange={(e) => setPointX(Number(e.target.value))} className="w-full accent-[#0033CC]" />
+            </div>
           </div>
-          <div>
-            <div className="flex justify-between font-mono text-xs font-bold mb-1"><span>Producir PCs</span><span>{pointX}</span></div>
-            <input type="range" min="0" max="150" value={pointX} onChange={(e) => setPointX(Number(e.target.value))} className="w-full accent-[#0033CC]" />
-          </div>
-        </div>
 
-        {/* Panel 3: Leyenda Visual (Toggles) */}
-        <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
-            <Layers className="w-5 h-5" /> Leyenda Visual
-          </h2>
-          <div className="space-y-3 font-mono text-xs">
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showFrontera} onChange={() => setShowFrontera(!showFrontera)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-              <div>
-                <strong className="uppercase block">Mostrar Frontera</strong>
-                <span className="text-[10px] text-gray-600">Línea que marca la producción máxima posible con la tecnología actual.</span>
-              </div>
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showGuias} onChange={() => setShowGuias(!showGuias)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-              <div>
-                <strong className="uppercase block">Mostrar Guías</strong>
-                <span className="text-[10px] text-gray-600">Líneas punteadas para visualizar fácilmente las coordenadas del punto de producción.</span>
-              </div>
-            </label>
+          {/* Panel 3: Leyenda Visual (Toggles) */}
+          <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+            <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
+              <Layers className="w-5 h-5" /> Leyenda Visual
+            </h2>
+            <div className="space-y-3 font-mono text-xs">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showFrontera} onChange={() => setShowFrontera(!showFrontera)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Mostrar Frontera</strong>
+                  <span className="text-[10px] text-gray-600">Línea que marca la producción máxima posible con la tecnología actual.</span>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showGuias} onChange={() => setShowGuias(!showGuias)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Mostrar Guías</strong>
+                  <span className="text-[10px] text-gray-600">Líneas punteadas para visualizar fácilmente las coordenadas del punto de producción.</span>
+                </div>
+              </label>
+            </div>
           </div>
-        </div>
-
-        <div className="border-4 border-[#111] shadow-[4px_4px_0_0_#111] p-4 text-white" style={{backgroundColor: fppColor}}>
-          <div className="font-mono text-xs font-black uppercase mb-1">Diagnóstico de Estado:</div>
-          <div className="font-serif text-2xl font-black mb-1 capitalize">{status}</div>
-          <div className="font-sans text-xs font-medium">
-            {status === 'eficiente' ? "Pleno empleo. Para fabricar más de un bien, debes renunciar al otro (Costo de Oportunidad)." : 
-             status === 'ineficiente' ? "Desempleo o recursos ociosos. Puedes producir más de ambos bienes sin sacrificar nada." : 
-             "Imposible con la tecnología actual. Necesitas crecimiento económico para llegar aquí."}
-          </div>
-        </div>
-      </div>
-
-      <div className="lg:col-span-8">
-        <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative">
+        </>
+      }
+      chart={
+        <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative h-full">
           <div className="absolute top-4 left-4 bg-[#111] text-[#F4F1EA] px-3 py-1 font-mono text-xs font-bold border-2 border-white z-10">FRONTERA DE POSIBILIDADES</div>
           <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-white">
             {drawGrid('gridF')}
@@ -136,7 +125,7 @@ const FPP = () => {
                   <text x={mapX(v)} y={gh-pB+18} textAnchor="middle">{v}</text>
               </g>))}
             </g>
-            
+
             {showFrontera && (
               <g>
                 <path d={`${pathD} L ${mapX(0)} ${mapY(0)} Z`} fill="#111" opacity="0.05" />
@@ -150,7 +139,7 @@ const FPP = () => {
                 <line x1={mapX(pointX)} y1={mapY(0)} x2={mapX(pointX)} y2={mapY(pointY)} stroke={fppColor} strokeDasharray="4,4" />
               </g>
             )}
-            
+
             <circle cx={mapX(pointX)} cy={mapY(pointY)} r="8" fill={fppColor} stroke="#fff" strokeWidth="2" />
             {nearFrontier && (
               <g aria-label="Punto cercano a la frontera" role="img">
@@ -159,8 +148,19 @@ const FPP = () => {
             )}
           </svg>
         </div>
-      </div>
-    </div>
+      }
+      results={
+        <div className="border-4 border-[#111] shadow-[4px_4px_0_0_#111] p-4 text-white" style={{backgroundColor: fppColor}}>
+          <div className="font-mono text-xs font-black uppercase mb-1">Diagnóstico de Estado:</div>
+          <div className="font-serif text-2xl font-black mb-1 capitalize">{status}</div>
+          <div className="font-sans text-xs font-medium">
+            {status === 'eficiente' ? "Pleno empleo. Para fabricar más de un bien, debes renunciar al otro (Costo de Oportunidad)." :
+             status === 'ineficiente' ? "Desempleo o recursos ociosos. Puedes producir más de ambos bienes sin sacrificar nada." :
+             "Imposible con la tecnología actual. Necesitas crecimiento económico para llegar aquí."}
+          </div>
+        </div>
+      }
+    />
   );
 };
 

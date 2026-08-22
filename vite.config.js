@@ -9,6 +9,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  esbuild: globalThis.process?.env?.VITEST ? { jsx: 'automatic' } : undefined,
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.js'],

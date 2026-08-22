@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { Layers, RotateCcw } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Layers } from 'lucide-react';
+import SimulatorLayout from './SimulatorLayout';
 import { calcularCostos, cvm, ctm, cmg } from '../domain/costos';
 
 const gw = 650; const gh = 450;
@@ -61,84 +62,60 @@ const Costos = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
-      <div className="lg:col-span-4 space-y-6">
-        <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 relative">
-          <h2 className="font-serif font-black text-2xl mb-4 border-b-4 border-[#111] pb-2">La Regla de Oro</h2>
-          <p className="font-sans text-xs font-medium leading-relaxed mb-4">
-            La empresa Competitiva produce donde <strong className="bg-[#FFD700] px-1">P = CMg</strong>. Las curvas de Costos Medios (CTM y CVM) tienen forma de U, y el CMg SIEMPRE las corta en su punto más bajo.
-          </p>
-        </div>
-
-        <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5">
-          <div className="flex justify-between items-center border-b-4 border-[#111] pb-2 mb-4">
-            <h2 className="font-serif font-black text-xl">Simulador de Crisis</h2>
-            <button onClick={handleReset} className="font-mono text-[9px] uppercase font-bold bg-[#E60039] text-white px-2 py-1 border-2 border-[#111] hover:bg-black transition-colors flex items-center gap-1" title="Restablecer todos los valores" aria-label="Restablecer simulador de costos">
-              <RotateCcw className="w-3 h-3" /> Restablecer
-            </button>
-          </div>
-          <div className="mb-6">
-            <div className="flex justify-between font-mono text-sm font-bold mb-2"><span>Precio Dictado ($)</span><span className="bg-[#111] text-[#FFD700] px-2">{firmPrice.toFixed(1)}</span></div>
-            <input type="range" min="2" max="16" step="0.5" value={firmPrice} onChange={(e) => setFirmPrice(Number(e.target.value))} className="w-full h-3 accent-[#E60039] bg-gray-200" />
-          </div>
-
-          <div className="p-4 border-4 border-[#111]" style={{backgroundColor: firmStatusColor}}>
-            <div className="font-mono text-[10px] font-black uppercase mb-1 text-[#111] bg-white/60 inline-block px-1">Decisión a Corto Plazo</div>
-            <div className="font-serif text-xl font-black leading-tight text-[#111] mb-1">{firmStatusText}</div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-2 text-center">
-            <div className="border-2 border-[#111] bg-[#F4F1EA] p-2">
-              <div className="font-mono text-[10px] font-bold uppercase">Cant. (Q*)</div>
-              <div className="font-serif font-black text-2xl">{firmQ > 0 ? firmQ.toFixed(1) : '0.0'}</div>
-            </div>
-            <div className="border-2 border-[#111] bg-[#F4F1EA] p-2">
-              <div className="font-mono text-[10px] font-bold uppercase">Beneficio</div>
-              <div className="font-serif font-black text-2xl" style={{color: firmStatusColor}}>{firmQ > 0 ? currentProfit.toFixed(1) : `-${fixedCost}`}</div>
+    <SimulatorLayout
+      title="La Regla de Oro"
+      onReset={handleReset}
+      resetLabel="Restablecer simulador de costos"
+      controls={
+        <>
+          <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5">
+            <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 mb-4">Simulador de Crisis</h2>
+            <div className="mb-6">
+              <div className="flex justify-between font-mono text-sm font-bold mb-2"><span>Precio Dictado ($)</span><span className="bg-[#111] text-[#FFD700] px-2">{firmPrice.toFixed(1)}</span></div>
+              <input type="range" min="2" max="16" step="0.5" value={firmPrice} onChange={(e) => setFirmPrice(Number(e.target.value))} className="w-full h-3 accent-[#E60039] bg-gray-200" />
             </div>
           </div>
-        </div>
 
-        {/* Panel 3: Leyenda Visual (Toggles) */}
-        <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-          <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
-            <Layers className="w-5 h-5" /> Leyenda Visual
-          </h2>
-          <div className="space-y-3 font-mono text-xs">
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showCMg} onChange={() => setShowCMg(!showCMg)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-              <div>
-                <strong className="uppercase block">Costo Marginal (CMg)</strong>
-                <span className="text-[10px] text-gray-600">Lo que cuesta producir una unidad extra. Representa la curva de Oferta.</span>
-              </div>
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showCostosMedios} onChange={() => setShowCostosMedios(!showCostosMedios)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-              <div>
-                <strong className="uppercase block">Costos Medios (CTM y CVM)</strong>
-                <span className="text-[10px] text-gray-600">Costo Total Medio (azul) y Costo Variable Medio (violeta). Determinan la rentabilidad.</span>
-              </div>
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showZonasCriticas} onChange={() => setShowZonasCriticas(!showZonasCriticas)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-              <div>
-                <strong className="uppercase block">Puntos Críticos</strong>
-                <span className="text-[10px] text-gray-600">Punto de Nivelación (donde Beneficio=0) y Punto de Cierre (donde conviene no producir).</span>
-              </div>
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showArea} onChange={() => setShowArea(!showArea)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-              <div>
-                <strong className="uppercase block">Área de Resultado</strong>
-                <span className="text-[10px] text-gray-600">Rectángulo que visualiza la ganancia o pérdida total de la empresa.</span>
-              </div>
-            </label>
+          {/* Panel 3: Leyenda Visual (Toggles) */}
+          <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+            <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
+              <Layers className="w-5 h-5" /> Leyenda Visual
+            </h2>
+            <div className="space-y-3 font-mono text-xs">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showCMg} onChange={() => setShowCMg(!showCMg)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Costo Marginal (CMg)</strong>
+                  <span className="text-[10px] text-gray-600">Lo que cuesta producir una unidad extra. Representa la curva de Oferta.</span>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showCostosMedios} onChange={() => setShowCostosMedios(!showCostosMedios)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Costos Medios (CTM y CVM)</strong>
+                  <span className="text-[10px] text-gray-600">Costo Total Medio (azul) y Costo Variable Medio (violeta). Determinan la rentabilidad.</span>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showZonasCriticas} onChange={() => setShowZonasCriticas(!showZonasCriticas)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Puntos Críticos</strong>
+                  <span className="text-[10px] text-gray-600">Punto de Nivelación (donde Beneficio=0) y Punto de Cierre (donde conviene no producir).</span>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showArea} onChange={() => setShowArea(!showArea)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Área de Resultado</strong>
+                  <span className="text-[10px] text-gray-600">Rectángulo que visualiza la ganancia o pérdida total de la empresa.</span>
+                </div>
+              </label>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div className="lg:col-span-8">
-        <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative">
+        </>
+      }
+      chart={
+        <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] p-2 relative h-full">
           <div className="absolute top-4 left-4 bg-[#111] text-[#F4F1EA] px-3 py-1 font-mono text-xs font-bold border-2 border-white z-10">ESTRUCTURA DE COSTOS Y CIERRE</div>
           <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto bg-white">
             {drawGrid('gridC')}
@@ -210,8 +187,34 @@ const Costos = () => {
             )}
           </svg>
         </div>
-      </div>
-    </div>
+      }
+      results={
+        <>
+          <div className="bg-[#F4F1EA] border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 relative">
+            <h2 className="font-serif font-black text-2xl mb-4 border-b-4 border-[#111] pb-2">La Regla de Oro</h2>
+            <p className="font-sans text-xs font-medium leading-relaxed mb-4">
+              La empresa Competitiva produce donde <strong className="bg-[#FFD700] px-1">P = CMg</strong>. Las curvas de Costos Medios (CTM y CVM) tienen forma de U, y el CMg SIEMPRE las corta en su punto más bajo.
+            </p>
+          </div>
+
+          <div className="p-4 border-4 border-[#111]" style={{backgroundColor: firmStatusColor}}>
+            <div className="font-mono text-[10px] font-black uppercase mb-1 text-[#111] bg-white/60 inline-block px-1">Decisión a Corto Plazo</div>
+            <div className="font-serif text-xl font-black leading-tight text-[#111] mb-1">{firmStatusText}</div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-center">
+            <div className="border-2 border-[#111] bg-[#F4F1EA] p-2">
+              <div className="font-mono text-[10px] font-bold uppercase">Cant. (Q*)</div>
+              <div className="font-serif font-black text-2xl">{firmQ > 0 ? firmQ.toFixed(1) : '0.0'}</div>
+            </div>
+            <div className="border-2 border-[#111] bg-[#F4F1EA] p-2">
+              <div className="font-mono text-[10px] font-bold uppercase">Beneficio</div>
+              <div className="font-serif font-black text-2xl" style={{color: firmStatusColor}}>{firmQ > 0 ? currentProfit.toFixed(1) : `-${fixedCost}`}</div>
+            </div>
+          </div>
+        </>
+      }
+    />
   );
 };
 

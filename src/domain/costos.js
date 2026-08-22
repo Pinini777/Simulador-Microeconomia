@@ -28,7 +28,7 @@ export const calcularCostos = (firmPrice) => {
   const currentCTM = firmQ > 0 ? ctm(firmQ) : 0;
   const currentProfit = firmQ > 0 ? (firmPrice - currentCTM) * firmQ : -FIXED_COST;
 
-  let status = '';
+  let status;
   if (firmQ === 0) {
     status = 'cierre';
   } else if (Math.abs(firmPrice - minCTM.p) <= 0.01) {
