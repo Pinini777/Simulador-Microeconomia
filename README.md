@@ -1,6 +1,6 @@
 #  Simulador de Microeconomía
 
-¿Como andas Maquina? Primero que nada, una aclaración importante: **no soy profesor de economía**. Soy simplemente un estudiante, que sin mucha idea, armó a lo kamikaze esta herramienta con el objetivo de ayudarnos a entender mejor los conceptos de la materia de Economia. 
+¿Como andas Maquina? Primero que nada, una aclaración importante: **no soy profesor de economía**. Soy simplemente un estudiante, que sin mucha idea, armó a lo kamikaze esta herramienta con el objetivo de ayudarnos a entender mejor los conceptos de Economia, en este caso, la Microeconomia. 
 
 A veces la teoría en los libros es medio abstracta, así que cree este simulador interactivo para que podamos visualizar qué pasa realmente cuando movemos las variables económicas, ya que si veo los graficos estaticos, no se me cae una sola idea.
 

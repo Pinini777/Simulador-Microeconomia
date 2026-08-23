@@ -185,7 +185,7 @@ const Mercado = () => {
         </>
       }
       chart={
-        <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] relative h-full">
+        <div className="bg-white border-4 border-[#111] shadow-[10px_10px_0_0_#111] relative">
           <div className="absolute top-4 left-4 bg-[#111] text-[#F4F1EA] px-3 py-1 font-mono text-xs font-bold border-2 border-white z-10">MERCADO & INCIDENCIA FISCAL</div>
           <svg viewBox={`0 0 ${gw} ${gh}`} className="w-full h-auto">
             {drawGrid('gridM')}
