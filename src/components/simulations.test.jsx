@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Costos from './Costos'
 import FPP from './FPP'
@@ -72,6 +72,33 @@ describe('FPP integration', () => {
 
     expect(screen.getByText('ineficiente')).toBeTruthy()
     expect(screen.getByLabelText('Punto cercano a la frontera')).toBeTruthy()
+  })
+
+  it('moves visual legend toggles into the results region and preserves toggle behavior', async () => {
+    const user = userEvent.setup()
+    render(<FPP />)
+
+    const results = screen.getByRole('region', { name: 'Resultados' })
+    const controls = screen.getByRole('region', { name: 'Controles' })
+
+    expect(within(results).getByText('Leyenda Visual')).toBeTruthy()
+    expect(within(controls).queryByText('Leyenda Visual')).toBeFalsy()
+
+    const frontierToggle = within(results).getByLabelText(/Mostrar Frontera/)
+    const guidesToggle = within(results).getByLabelText(/Mostrar Guías/)
+
+    expect(frontierToggle.checked).toBe(true)
+    expect(guidesToggle.checked).toBe(true)
+
+    await user.click(frontierToggle)
+    expect(frontierToggle.checked).toBe(false)
+
+    await user.click(guidesToggle)
+    expect(guidesToggle.checked).toBe(false)
+
+    await user.click(screen.getByLabelText(/Restablecer simulador de FPP/))
+    expect(frontierToggle.checked).toBe(true)
+    expect(guidesToggle.checked).toBe(true)
   })
 })
 

@@ -59,6 +59,7 @@ Chain strategy: stacked-to-main
 - [ ] 4.3 Verify workflow passes on push/PR via first remote run or local `act` invocation.
 - [x] 4.4 Update `SimulatorLayout` to a desktop `2/8/2` grid with `items-start`, remove `h-full` from the Mercado, FPP, Costos, and Monopolio chart wrappers, preserve single-column mobile behavior and all module state/math, and prove the fix with focused tests and a production build.
 - [x] 4.5 Remediate the Human Gate regression: set the outer shell to `w-full max-w-[120rem]`; replace the `2/8/2` layout with a responsive shared grid that defines minimum control and result widths plus a two-column intermediate breakpoint; conditionally omit the empty results region; keep the title/reset header from compressing; prevent Mercado scenario buttons from clipping; add structural tests and run lint, tests, and a production build.
+- [x] 4.6 Move FPP's visual legend/toggles into the existing results/supporting region below the diagnostic; keep technology and production controls left; preserve all state, handlers, and accessibility; add focused structure tests; and run lint, tests, and a production build.
 
 ## Phase 5: Human Acceptance Gates
 

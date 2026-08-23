@@ -80,29 +80,6 @@ const FPP = () => {
               <input type="range" min="0" max="150" value={pointX} onChange={(e) => setPointX(Number(e.target.value))} className="w-full accent-[#0033CC]" />
             </div>
           </div>
-
-          {/* Panel 3: Leyenda Visual (Toggles) */}
-          <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-            <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
-              <Layers className="w-5 h-5" /> Leyenda Visual
-            </h2>
-            <div className="space-y-3 font-mono text-xs">
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input type="checkbox" checked={showFrontera} onChange={() => setShowFrontera(!showFrontera)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-                <div>
-                  <strong className="uppercase block">Mostrar Frontera</strong>
-                  <span className="text-[10px] text-gray-600">Línea que marca la producción máxima posible con la tecnología actual.</span>
-                </div>
-              </label>
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input type="checkbox" checked={showGuias} onChange={() => setShowGuias(!showGuias)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
-                <div>
-                  <strong className="uppercase block">Mostrar Guías</strong>
-                  <span className="text-[10px] text-gray-600">Líneas punteadas para visualizar fácilmente las coordenadas del punto de producción.</span>
-                </div>
-              </label>
-            </div>
-          </div>
         </>
       }
       chart={
@@ -150,15 +127,39 @@ const FPP = () => {
         </div>
       }
       results={
-        <div className="border-4 border-[#111] shadow-[4px_4px_0_0_#111] p-4 text-white" style={{backgroundColor: fppColor}}>
-          <div className="font-mono text-xs font-black uppercase mb-1">Diagnóstico de Estado:</div>
-          <div className="font-serif text-2xl font-black mb-1 capitalize">{status}</div>
-          <div className="font-sans text-xs font-medium">
-            {status === 'eficiente' ? "Pleno empleo. Para fabricar más de un bien, debes renunciar al otro (Costo de Oportunidad)." :
-             status === 'ineficiente' ? "Desempleo o recursos ociosos. Puedes producir más de ambos bienes sin sacrificar nada." :
-             "Imposible con la tecnología actual. Necesitas crecimiento económico para llegar aquí."}
+        <>
+          <div className="border-4 border-[#111] shadow-[4px_4px_0_0_#111] p-4 text-white" style={{backgroundColor: fppColor}}>
+            <div className="font-mono text-xs font-black uppercase mb-1">Diagnóstico de Estado:</div>
+            <div className="font-serif text-2xl font-black mb-1 capitalize">{status}</div>
+            <div className="font-sans text-xs font-medium">
+              {status === 'eficiente' ? "Pleno empleo. Para fabricar más de un bien, debes renunciar al otro (Costo de Oportunidad)." :
+               status === 'ineficiente' ? "Desempleo o recursos ociosos. Puedes producir más de ambos bienes sin sacrificar nada." :
+               "Imposible con la tecnología actual. Necesitas crecimiento económico para llegar aquí."}
+            </div>
           </div>
-        </div>
+
+          <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
+            <h2 className="font-serif font-black text-xl border-b-4 border-[#111] pb-2 flex items-center gap-2">
+              <Layers className="w-5 h-5" /> Leyenda Visual
+            </h2>
+            <div className="space-y-3 font-mono text-xs">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showFrontera} onChange={() => setShowFrontera(!showFrontera)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Mostrar Frontera</strong>
+                  <span className="text-[10px] text-gray-600">Línea que marca la producción máxima posible con la tecnología actual.</span>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" checked={showGuias} onChange={() => setShowGuias(!showGuias)} className="w-5 h-5 accent-[#111] mt-0.5 border-2 border-[#111]" />
+                <div>
+                  <strong className="uppercase block">Mostrar Guías</strong>
+                  <span className="text-[10px] text-gray-600">Líneas punteadas para visualizar fácilmente las coordenadas del punto de producción.</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </>
       }
     />
   );
