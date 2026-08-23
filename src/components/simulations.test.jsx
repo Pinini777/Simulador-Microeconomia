@@ -5,6 +5,7 @@ import Costos from './Costos'
 import FPP from './FPP'
 import Mercado from './Mercado'
 import Monopolio from './Monopolio'
+import SimulatorLayout from './SimulatorLayout'
 
 describe('Costos integration', () => {
   it('resets controls to defaults', async () => {
@@ -272,11 +273,32 @@ describe('SimulatorLayout zones', () => {
     expect(screen.getAllByRole('slider')[0].value).toBe('100')
   })
 
-  it('keeps Monopolio results optional without crashing', () => {
-    const { container } = render(<Monopolio />)
+  it('omits the empty results region for Monopolio', () => {
+    render(<Monopolio />)
     expect(screen.getByRole('region', { name: 'Controles' })).toBeTruthy()
     expect(screen.getByRole('region', { name: 'Gráfico' })).toBeTruthy()
+    expect(screen.queryByRole('region', { name: 'Resultados' })).toBeFalsy()
+  })
+
+  it('conditionally renders the results region based on the results prop', () => {
+    const { rerender } = render(
+      <SimulatorLayout
+        title="Layout test"
+        controls={<div>controls</div>}
+        chart={<div>chart</div>}
+        results={<div>results</div>}
+      />
+    )
     expect(screen.getByRole('region', { name: 'Resultados' })).toBeTruthy()
-    expect(container.querySelector('[aria-label="Resultados"]').children.length).toBe(0)
+
+    rerender(
+      <SimulatorLayout
+        title="Layout test"
+        controls={<div>controls</div>}
+        chart={<div>chart</div>}
+        results={null}
+      />
+    )
+    expect(screen.queryByRole('region', { name: 'Resultados' })).toBeFalsy()
   })
 })

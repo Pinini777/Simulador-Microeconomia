@@ -87,9 +87,9 @@ const Mercado = () => {
       controls={
         <>
           <div className="bg-white border-4 border-[#111] shadow-[6px_6px_0_0_#111] p-5 space-y-4">
-            <div className="flex gap-2 font-mono text-xs uppercase font-bold">
+            <div className="grid grid-cols-3 gap-2 font-mono text-xs uppercase font-bold">
               {['libre', 'impuesto', 'subsidio'].map(t => (
-                <button key={t} onClick={() => handleScenarioChange(t)} className={`flex-1 p-2 border-2 border-[#111] ${escMercado === t ? 'bg-[#111] text-[#FFD700]' : 'hover:bg-gray-100'}`}>
+                <button key={t} onClick={() => handleScenarioChange(t)} className={`min-w-0 p-2 border-2 border-[#111] ${escMercado === t ? 'bg-[#111] text-[#FFD700]' : 'hover:bg-gray-100'}`}>
                   {t}
                 </button>
               ))}
